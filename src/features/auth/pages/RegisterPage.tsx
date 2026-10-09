@@ -1,177 +1,198 @@
-import { useState, type FormEvent } from "react";
-import { IconSprite } from "../../../components/Icons";
-import "../../../styles/register.css";
+import type { FormEvent } from "react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import AuthShell from "../../../components/auth/AuthShell";
+import AuthField from "../../../components/auth/AuthField";
+import { Icon } from "../../../components/Icons";
+import { A_REGISTER as T } from "../../../data/auth";
+import {
+  AuthError,
+  EMAIL_RE,
+  passwordOk,
+  passwordRules,
+  register,
+} from "../../../utils/auth";
+import track from "../../../utils/track";
+
+// Page Inscription — /inscription (nom, e-mail, mot de passe, confirmation).
+// Le serveur revalide tout (la validation ci-dessous n'est qu'un confort) et envoie l'e-mail de vérification.
+type Field = "name" | "email" | "password" | "confirm";
+type Errors = Partial<Record<Field, string>>;
 
 export default function RegisterPage() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [message, setMessage] = useState("");
+  const [d, setD] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirm: "",
+    website: "",
+  });
+  const [err, setErr] = useState<Errors>({});
+  const [fail, setFail] = useState("");
+  const [sending, setSending] = useState(false);
+  const [doneEmail, setDoneEmail] = useState<string | null>(null);
 
-  const passwordsMatch =
-    confirmPassword.length > 0 && password === confirmPassword;
+  const set = (k: keyof typeof d) => (v: string) => {
+    setD(x => ({ ...x, [k]: v }));
+    setErr(x => ({ ...x, [k]: undefined }));
+  };
+  const rules = passwordRules(d.password);
 
-  const passwordMismatch =
-    confirmPassword.length > 0 && password !== confirmPassword;
+  const submit = async (ev: FormEvent) => {
+    ev.preventDefault();
+    const e: Errors = {};
+    if (d.name.trim().length < 2) e.name = T.errors.name;
+    if (!EMAIL_RE.test(d.email.trim())) e.email = T.errors.email;
+    if (!passwordOk(d.password)) e.password = T.errors.password;
+    if (d.confirm !== d.password) e.confirm = T.errors.confirm;
+    setErr(e);
+    setFail("");
+    if (Object.keys(e).length) return;
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setMessage("");
-
-    if (password !== confirmPassword) {
-      setMessage("Les mots de passe ne correspondent pas.");
-      return;
+    setSending(true);
+    const email = d.email.trim().toLowerCase();
+    try {
+      await register({
+        name: d.name.trim(),
+        email,
+        password: d.password,
+        confirmPassword: d.confirm,
+        website: d.website,
+      });
+      track("register_success");
+      setDoneEmail(email);
+    } catch (x) {
+      if (x instanceof AuthError && x.status === 409)
+        setErr({ email: T.errors.exists });
+      else
+        setFail(
+          x instanceof AuthError &&
+            x.status >= 400 &&
+            x.status < 500 &&
+            x.status !== 429 &&
+            x.message !== "error"
+            ? x.message
+            : T.errors.network
+        );
+      setSending(false);
     }
-
-    setMessage(
-      "Les champs sont valides. Reliez cette page au service d’inscription."
-    );
-  }
+  };
 
   return (
-    <main className="register-page">
-      <IconSprite />
-
-      <div className="register-glow register-glow-one" aria-hidden="true" />
-      <div className="register-glow register-glow-two" aria-hidden="true" />
-
-      <a
-        className="register-brand"
-        href="/"
-        aria-label="Support Connecté, accueil"
-      >
-        <img
-          src="/images/logo-blanc.webp"
-          alt="Support Connecté"
-          width="150"
-          height="47"
-        />
-      </a>
-
-      <section className="register-card" aria-labelledby="register-title">
-        <div className="register-mark" aria-hidden="true">
-          <span>SC</span>
-          <i />
+    <AuthShell
+      title={T.title}
+      description={T.meta}
+      label={T.label}
+      h1={T.h1}
+      lead={T.lead}
+    >
+      {doneEmail ? (
+        <div className="au-done" role="status">
+          <span className="au-ok">
+            <Icon id="i-mail" />
+          </span>
+          <h2>{T.done.title}</h2>
+          <p>{T.done.text(doneEmail)}</p>
+          <p className="au-hint">{T.done.hint}</p>
+          <Link to="/connexion" className="btn btn-line dark">
+            {T.done.login}
+          </Link>
         </div>
-
-        <p className="register-eyebrow">SUPPORT CONNECTÉ</p>
-
-        <h1 id="register-title">
-          Créez votre <span>compte.</span>
-        </h1>
-
-        <p className="register-intro">Quelques informations pour commencer.</p>
-
-        <form className="register-form" onSubmit={handleSubmit}>
-          <label htmlFor="register-name">Nom complet</label>
-          <input
-            id="register-name"
-            name="name"
-            type="text"
+      ) : (
+        <form onSubmit={submit} noValidate className="au-form">
+          <header>
+            <h2>{T.heading}</h2>
+            <p>{T.sub}</p>
+          </header>
+          <AuthField
+            id="name"
+            label={T.fields.name}
+            value={d.name}
             autoComplete="name"
-            placeholder="Votre nom"
-            value={name}
-            onChange={event => setName(event.target.value)}
-            required
+            error={err.name}
+            disabled={sending}
+            maxLength={120}
+            onChange={set("name")}
           />
-
-          <label htmlFor="register-email">Adresse e-mail</label>
-          <input
-            id="register-email"
-            name="email"
+          <AuthField
+            id="email"
             type="email"
+            label={T.fields.email}
+            value={d.email}
             autoComplete="email"
-            placeholder="vous@exemple.com"
-            value={email}
-            onChange={event => setEmail(event.target.value)}
-            required
+            error={err.email}
+            disabled={sending}
+            onChange={set("email")}
           />
-
-          <label htmlFor="register-password">Mot de passe</label>
-          <div className="register-password-wrap">
-            <input
-              id="register-password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="new-password"
-              placeholder="8 caractères minimum"
-              minLength={8}
-              value={password}
-              onChange={event => setPassword(event.target.value)}
-              required
-            />
-
-            <button
-              type="button"
-              className="register-show-password"
-              onClick={() => setShowPassword(value => !value)}
-              aria-label={
-                showPassword
-                  ? "Masquer les mots de passe"
-                  : "Afficher les mots de passe"
-              }
-            >
-              {showPassword ? "Masquer" : "Afficher"}
-            </button>
-          </div>
-
-          <label htmlFor="register-confirm-password">
-            Confirmer le mot de passe
-          </label>
-          <input
-            id="register-confirm-password"
-            name="confirmPassword"
-            type={showPassword ? "text" : "password"}
+          <AuthField
+            id="password"
+            type="password"
+            label={T.fields.password}
+            value={d.password}
             autoComplete="new-password"
-            placeholder="Saisissez à nouveau le mot de passe"
-            value={confirmPassword}
-            onChange={event => {
-              setConfirmPassword(event.target.value);
-              setMessage("");
-            }}
-            aria-invalid={passwordMismatch}
-            aria-describedby={
-              passwordMismatch
-                ? "register-password-error"
-                : passwordsMatch
-                  ? "register-password-success"
-                  : undefined
-            }
-            required
+            error={err.password}
+            disabled={sending}
+            maxLength={128}
+            onChange={set("password")}
           />
-
-          {passwordMismatch && (
-            <p className="register-field-error" id="register-password-error">
-              Les mots de passe ne correspondent pas.
+          <ul className="au-rules" aria-label="Critères du mot de passe">
+            {(Object.keys(T.rules) as (keyof typeof T.rules)[]).map(k => (
+              <li key={k} className={rules[k] ? "ok" : undefined}>
+                <span>
+                  <Icon id="i-check" />
+                </span>
+                {T.rules[k]}
+              </li>
+            ))}
+          </ul>
+          <AuthField
+            id="confirm"
+            type="password"
+            label={T.fields.confirm}
+            value={d.confirm}
+            autoComplete="new-password"
+            error={err.confirm}
+            disabled={sending}
+            maxLength={128}
+            onChange={set("confirm")}
+          />
+          {/* Piège anti-robot (comme sur le formulaire de contact) */}
+          <input
+            className="au-hp"
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            name="website"
+            value={d.website}
+            onChange={e => set("website")(e.target.value)}
+          />
+          {fail && (
+            <p className="au-err" role="alert">
+              {fail}
             </p>
           )}
-
-          {passwordsMatch && (
-            <p
-              className="register-field-success"
-              id="register-password-success"
-            >
-              Les mots de passe correspondent.
-            </p>
-          )}
-
-          <button className="register-submit" type="submit">
-            Créer mon compte <span aria-hidden="true">↗</span>
+          <button type="submit" className="btn btn-red" disabled={sending}>
+            {sending ? T.sending : T.submit} <Icon id="arr" />
           </button>
-
-          {message && (
-            <p className="register-message" role="status">
-              {message}
-            </p>
-          )}
+          <p className="au-hint">
+            {T.legal[0]}
+            <Link to="/mentions-legales" className="au-link">
+              {T.legal[1]}
+            </Link>
+            {T.legal[2]}
+            <Link to="/confidentialite" className="au-link">
+              {T.legal[3]}
+            </Link>
+            {T.legal[4]}
+          </p>
+          <p className="au-alt">
+            {T.haveAccount}{" "}
+            <Link to="/connexion" className="au-link">
+              {T.login}
+            </Link>
+          </p>
         </form>
-      </section>
-
-      <p className="register-footer">
-        © {new Date().getFullYear()} Support Connecté
-      </p>
-    </main>
+      )}
+    </AuthShell>
   );
 }
