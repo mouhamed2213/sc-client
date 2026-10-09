@@ -41,6 +41,8 @@ export default function RegisterPage() {
   const submit = async (ev: FormEvent) => {
     ev.preventDefault();
     const e: Errors = {};
+
+    // Verify inputs
     if (d.name.trim().length < 2) e.name = T.errors.name;
     if (!EMAIL_RE.test(d.email.trim())) e.email = T.errors.email;
     if (!passwordOk(d.password)) e.password = T.errors.password;
