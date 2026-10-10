@@ -11,7 +11,7 @@ import Footer from "./components/Footer";
 import Header from "./components/Header";
 import { IconSprite } from "./components/Icons";
 import { SECTORS } from "./data/secteurs";
-// import LoginPage from "./features/auth/pages/LoginPage"; // Importez votre page de connexion
+import LoginPage from "./features/auth/pages/LoginPage"; // Importez votre page de connexion
 import RegisterPage from "./features/auth/pages/RegisterPage";
 import AProposPage from "./pages/AProposPage";
 import BrandingPage from "./pages/BrandingPage";
@@ -22,7 +22,6 @@ import LegalPage, { LEGAL_PATHS } from "./pages/LegalPage";
 import PanneauxPage from "./pages/PanneauxPage";
 import QrSmartPage from "./pages/QrSmartPage";
 import SecteursPage from "./pages/SecteursPage";
-import LoginPage from "./features/auth/pages/LoginPage";
 
 // Pages chargées à la demande
 const ContenuPage = lazy(() => import("./pages/ContenuPage"));
@@ -121,6 +120,7 @@ export default function App() {
           {/* <Route path="/login" element={<LoginPage />} /> */}
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/verify-mail" element={<LoginPage />} />
 
           {/* Page 404 */}
           <Route path="*" element={<NotFound />} />

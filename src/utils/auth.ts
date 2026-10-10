@@ -49,13 +49,6 @@ async function post<T>(
 
 export const login = (p: { email: string; password: string }) =>
   post<{ user: AuthUser }>("/api/auth/login", p);
-export const register = (p: {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  website: string;
-}) => post<{ user: AuthUser }>("/api/auth/register", p);
 
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 export const passwordRules = (pw: string) => ({

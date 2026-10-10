@@ -1,18 +1,16 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import AuthShell from "../../../components/auth/AuthShell";
 import AuthField from "../../../components/auth/AuthField";
+import AuthShell from "../../../components/auth/AuthShell";
 import { Icon } from "../../../components/Icons";
 import { A_REGISTER as T } from "../../../data/auth";
-import {
-  AuthError,
-  EMAIL_RE,
-  passwordOk,
-  passwordRules,
-  register,
-} from "../../../utils/auth";
+// import { register } from "../auth.service";
+// import { useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
+import { EMAIL_RE, passwordOk, passwordRules } from "../../../utils/auth";
 import track from "../../../utils/track";
+import { register } from "../auth.service";
 
 // Page Inscription — /inscription (nom, e-mail, mot de passe, confirmation).
 // Le serveur revalide tout (la validation ci-dessous n'est qu'un confort) et envoie l'e-mail de vérification.
@@ -38,8 +36,10 @@ export default function RegisterPage() {
   };
   const rules = passwordRules(d.password);
 
-  const submit = async (ev: FormEvent) => {
+  //  Send the Request
+  const submit = (ev: FormEvent) => {
     ev.preventDefault();
+
     const e: Errors = {};
 
     // Verify inputs
@@ -48,37 +48,26 @@ export default function RegisterPage() {
     if (!passwordOk(d.password)) e.password = T.errors.password;
     if (d.confirm !== d.password) e.confirm = T.errors.confirm;
     setErr(e);
-    setFail("");
+
     if (Object.keys(e).length) return;
 
     setSending(true);
     const email = d.email.trim().toLowerCase();
-    try {
-      await register({
-        name: d.name.trim(),
-        email,
-        password: d.password,
-        confirmPassword: d.confirm,
-        website: d.website,
-      });
-      track("register_success");
-      setDoneEmail(email);
-    } catch (x) {
-      if (x instanceof AuthError && x.status === 409)
-        setErr({ email: T.errors.exists });
-      else
-        setFail(
-          x instanceof AuthError &&
-            x.status >= 400 &&
-            x.status < 500 &&
-            x.status !== 429 &&
-            x.message !== "error"
-            ? x.message
-            : T.errors.network
-        );
-      setSending(false);
-    }
+
+    //  give data to the Use mutation hook
+    mutate({
+      email,
+      name: d.name,
+      password: d.password,
+    });
+
+    track("register_success");
+    setDoneEmail(email);
   };
+
+  const { mutate, isPending, isError } = useMutation({
+    mutationFn: register,
+  });
 
   return (
     <AuthShell
@@ -96,7 +85,7 @@ export default function RegisterPage() {
           <h2>{T.done.title}</h2>
           <p>{T.done.text(doneEmail)}</p>
           <p className="au-hint">{T.done.hint}</p>
-          <Link to="/connexion" className="btn btn-line dark">
+          <Link to="/login" className="btn btn-line dark">
             {T.done.login}
           </Link>
         </div>
@@ -189,7 +178,7 @@ export default function RegisterPage() {
           </p>
           <p className="au-alt">
             {T.haveAccount}{" "}
-            <Link to="/connexion" className="au-link">
+            <Link to="/login" className="au-link">
               {T.login}
             </Link>
           </p>
