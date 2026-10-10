@@ -1,3 +1,4 @@
+import { useMutation } from "@tanstack/react-query";
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -5,8 +6,9 @@ import AuthField from "../../../components/auth/AuthField";
 import AuthShell from "../../../components/auth/AuthShell";
 import { Icon } from "../../../components/Icons";
 import { AFTER_LOGIN, A_LOGIN as T } from "../../../data/auth";
-import { AuthError, EMAIL_RE, login, safePath } from "../../../utils/auth";
+import { EMAIL_RE, safePath } from "../../../utils/auth";
 import track from "../../../utils/track";
+import { login } from "../auth.service";
 
 // Page Connexion — /connexion (e-mail + mot de passe). ?from=/chemin ou state.from : retour à la page demandée.
 type Errors = { email?: string; password?: string };
@@ -36,22 +38,19 @@ export default function LoginPage() {
     if (Object.keys(e).length) return;
 
     setSending(true);
-    try {
-      await login({ email: email.trim().toLowerCase(), password });
-      track("login_success");
-      navigate(target, { replace: true });
-    } catch (x) {
-      const s = x instanceof AuthError ? x.status : 0;
-      setFail(
-        s === 401 || s === 400 || s === 422
-          ? T.errors.credentials
-          : s === 429
-            ? T.errors.tooMany
-            : T.errors.network
-      );
-      setSending(false);
-    }
+    mutate({
+      email,
+      password,
+    });
+    setSending(false);
   };
+
+  const { mutate, isError, error } = useMutation({
+    mutationFn: login,
+    onSuccess: () => {
+      navigate(target, { replace: true });
+    },
+  });
 
   return (
     <AuthShell
@@ -98,9 +97,9 @@ export default function LoginPage() {
             {T.forgot}
           </Link>
         </div>
-        {fail && (
+        {isError && (
           <p className="au-err" role="alert">
-            {fail}
+            {error.message}
           </p>
         )}
         <button type="submit" className="btn btn-red" disabled={sending}>

@@ -77,15 +77,16 @@ export type BienType = (typeof BIEN_TYPES)[number];
 
 /* ───────────────────────── Contenu de la fiche ───────────────────────── */
 
-
-
-
-export interface IRegister {
+export type IRegister = {
   email: string;
   password: string;
   name: string;
 };
 
+export type Login = {
+  email: string;
+  password: string;
+};
 
 export interface FicheOnglet {
   id: string; // cuid

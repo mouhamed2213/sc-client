@@ -1,3 +1,4 @@
+import { useMutation } from "@tanstack/react-query";
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -5,11 +6,7 @@ import AuthField from "../../../components/auth/AuthField";
 import AuthShell from "../../../components/auth/AuthShell";
 import { Icon } from "../../../components/Icons";
 import { A_REGISTER as T } from "../../../data/auth";
-// import { register } from "../auth.service";
-// import { useMutation } from "@tanstack/react-query";
-import { useMutation } from "@tanstack/react-query";
 import { EMAIL_RE, passwordOk, passwordRules } from "../../../utils/auth";
-import track from "../../../utils/track";
 import { register } from "../auth.service";
 
 // Page Inscription — /inscription (nom, e-mail, mot de passe, confirmation).
@@ -26,7 +23,6 @@ export default function RegisterPage() {
     website: "",
   });
   const [err, setErr] = useState<Errors>({});
-  const [fail, setFail] = useState("");
   const [sending, setSending] = useState(false);
   const [doneEmail, setDoneEmail] = useState<string | null>(null);
 
@@ -61,12 +57,19 @@ export default function RegisterPage() {
       password: d.password,
     });
 
-    track("register_success");
     setDoneEmail(email);
   };
 
-  const { mutate, isPending, isError } = useMutation({
+  const { mutate, isPending, isError, error } = useMutation({
     mutationFn: register,
+
+    onSuccess: (_data, variables) => {
+      setDoneEmail(variables.email);
+    },
+
+    onError: () => {
+      setSending(false);
+    },
   });
 
   return (
@@ -77,7 +80,7 @@ export default function RegisterPage() {
       h1={T.h1}
       lead={T.lead}
     >
-      {doneEmail ? (
+      {doneEmail && !isError ? (
         <div className="au-done" role="status">
           <span className="au-ok">
             <Icon id="i-mail" />
@@ -157,9 +160,11 @@ export default function RegisterPage() {
             value={d.website}
             onChange={e => set("website")(e.target.value)}
           />
-          {fail && (
+          {isError && (
             <p className="au-err" role="alert">
-              {fail}
+              {error instanceof Error
+                ? error.message
+                : "Une erreur est survenue lors de l'inscription."}
             </p>
           )}
           <button type="submit" className="btn btn-red" disabled={sending}>
