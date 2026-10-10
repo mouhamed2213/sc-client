@@ -22,6 +22,7 @@ import LegalPage, { LEGAL_PATHS } from "./pages/LegalPage";
 import PanneauxPage from "./pages/PanneauxPage";
 import QrSmartPage from "./pages/QrSmartPage";
 import SecteursPage from "./pages/SecteursPage";
+import { VerifyMailPage } from "./pages/VerifyMailPage";
 
 // Pages chargées à la demande
 const ContenuPage = lazy(() => import("./pages/ContenuPage"));
@@ -120,7 +121,7 @@ export default function App() {
           {/* <Route path="/login" element={<LoginPage />} /> */}
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/verify-mail" element={<LoginPage />} />
+          <Route path="/verify-email" element={<VerifyMailPage />} />
 
           {/* Page 404 */}
           <Route path="*" element={<NotFound />} />

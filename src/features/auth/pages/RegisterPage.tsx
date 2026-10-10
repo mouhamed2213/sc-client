@@ -60,7 +60,7 @@ export default function RegisterPage() {
     setDoneEmail(email);
   };
 
-  const { mutate, isPending, isError, error } = useMutation({
+  const { mutate, isError, error } = useMutation({
     mutationFn: register,
 
     onSuccess: (_data, variables) => {

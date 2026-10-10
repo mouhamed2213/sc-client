@@ -7,7 +7,6 @@ import AuthShell from "../../../components/auth/AuthShell";
 import { Icon } from "../../../components/Icons";
 import { AFTER_LOGIN, A_LOGIN as T } from "../../../data/auth";
 import { EMAIL_RE, safePath } from "../../../utils/auth";
-import track from "../../../utils/track";
 import { login } from "../auth.service";
 
 // Page Connexion — /connexion (e-mail + mot de passe). ?from=/chemin ou state.from : retour à la page demandée.
