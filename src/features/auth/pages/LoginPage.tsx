@@ -92,7 +92,7 @@ export default function LoginPage() {
           }}
         />
         <div className="au-row">
-          <Link to="/mot-de-passe-oublie" className="au-link">
+          <Link to="/forgot-password" className="au-link">
             {T.forgot}
           </Link>
         </div>

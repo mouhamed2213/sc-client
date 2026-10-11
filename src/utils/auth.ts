@@ -47,9 +47,6 @@ async function post<T>(
   return data;
 }
 
-export const login = (p: { email: string; password: string }) =>
-  post<{ user: AuthUser }>("/api/auth/login", p);
-
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 export const passwordRules = (pw: string) => ({
   length: pw.length >= 8,

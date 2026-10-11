@@ -11,8 +11,10 @@ import Footer from "./components/Footer";
 import Header from "./components/Header";
 import { IconSprite } from "./components/Icons";
 import { SECTORS } from "./data/secteurs";
+import { ForgotPasswordPage } from "./features/auth/pages/ForgotPasswordPage";
 import LoginPage from "./features/auth/pages/LoginPage"; // Importez votre page de connexion
 import RegisterPage from "./features/auth/pages/RegisterPage";
+import { VerifyMailPage } from "./features/auth/pages/VerifyMailPage";
 import AProposPage from "./pages/AProposPage";
 import BrandingPage from "./pages/BrandingPage";
 import CartesPage from "./pages/CartesPage";
@@ -22,7 +24,7 @@ import LegalPage, { LEGAL_PATHS } from "./pages/LegalPage";
 import PanneauxPage from "./pages/PanneauxPage";
 import QrSmartPage from "./pages/QrSmartPage";
 import SecteursPage from "./pages/SecteursPage";
-import { VerifyMailPage } from "./pages/VerifyMailPage";
+import { ResetPasswordPage } from "./features/auth/pages/ResetPasswordPage";
 
 // Pages chargées à la demande
 const ContenuPage = lazy(() => import("./pages/ContenuPage"));
@@ -121,7 +123,11 @@ export default function App() {
           {/* <Route path="/login" element={<LoginPage />} /> */}
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
+
+
           <Route path="/verify-email" element={<VerifyMailPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
           {/* Page 404 */}
           <Route path="*" element={<NotFound />} />
