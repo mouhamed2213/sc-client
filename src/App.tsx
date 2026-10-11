@@ -14,7 +14,10 @@ import { SECTORS } from "./data/secteurs";
 import { ForgotPasswordPage } from "./features/auth/pages/ForgotPasswordPage";
 import LoginPage from "./features/auth/pages/LoginPage"; // Importez votre page de connexion
 import RegisterPage from "./features/auth/pages/RegisterPage";
+import { ResetPasswordPage } from "./features/auth/pages/ResetPasswordPage";
 import { VerifyMailPage } from "./features/auth/pages/VerifyMailPage";
+import { EspaceClientLayout } from "./features/dashboard/components/EspaceClientLayout";
+import { DashboardPage } from "./features/dashboard/pages/DashboardPage";
 import AProposPage from "./pages/AProposPage";
 import BrandingPage from "./pages/BrandingPage";
 import CartesPage from "./pages/CartesPage";
@@ -24,7 +27,6 @@ import LegalPage, { LEGAL_PATHS } from "./pages/LegalPage";
 import PanneauxPage from "./pages/PanneauxPage";
 import QrSmartPage from "./pages/QrSmartPage";
 import SecteursPage from "./pages/SecteursPage";
-import { ResetPasswordPage } from "./features/auth/pages/ResetPasswordPage";
 
 // Pages chargées à la demande
 const ContenuPage = lazy(() => import("./pages/ContenuPage"));
@@ -119,15 +121,24 @@ export default function App() {
             <Route path="/secteurs/:sector" element={<SectorRoute />} />
           </Route>
 
-          {/* Pages d'authentification (HORS du PublicLayout -> Sans Header/Footer) */}
-          {/* <Route path="/login" element={<LoginPage />} /> */}
+          {/* Pages d'authentification */}
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
-
 
           <Route path="/verify-email" element={<VerifyMailPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+          {/* Pages espace client */}
+          <Route element={<EspaceClientLayout />}>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/espace-client" element={<DashboardPage />} />
+
+            {/* <Route path="" element={}/>
+          <Route path="" element={}/>
+          <Route path="" element={}/>
+          <Route path="" element={}/> */}
+          </Route>
 
           {/* Page 404 */}
           <Route path="*" element={<NotFound />} />
