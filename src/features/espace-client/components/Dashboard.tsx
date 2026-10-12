@@ -253,8 +253,8 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
             <h2>Partager</h2>
             {/* <QR text={url} logo={cur.logo ?? undefined} size={150} /> */}
             <code>{url.replace("https://", "")}</code>
-            <button className="db-copy" onClick={copy}>
-              {/* <I n="link" s={15} /> {copied ? "Lien copié ✓" : "Copier le lien"} */}
+            <button className="db-copy" onClick={copy} aria-live="polite">
+              {copied ? "Lien copié ✓" : "Copier le lien"}
             </button>
           </div>
           <div className="db-card">

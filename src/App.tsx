@@ -138,15 +138,8 @@ export default function App() {
               path="/"
               element={<Navigate to="/espace-client" replace />}
             />
-            {/* <Route path="/espace-client" element={<ClientLayout user={USER} />}> */}
-            <Route
-              path="/espace-client"
-              element={
-                <ClientLayout
-                  user={{ email: "Changeme", name: "find the logic" }}
-                />
-              }
-            >
+            <Route path="/espace-client" element={<ClientLayout user={USER} />}>
+   
               <Route index element={<DashboardPage />} />
               {/* <Route path="fiches/:slug" element={<EditorPage />} /> */}
               <Route path="parametres" element={<SettingsPage />} />

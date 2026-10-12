@@ -1,6 +1,7 @@
 // create fiche
 import axios from "axios";
 import { api } from "../../lib/api";
+import type { ApiFiche } from "./api-types";
 
 export async function createFiche(data: any) {
   try {
@@ -16,4 +17,13 @@ export async function createFiche(data: any) {
     }
     return;
   }
+}
+
+export async function getDashboardFiche(
+  signal?: AbortSignal
+): Promise<ApiFiche[]> {
+  const response = await api.get<ApiFiche[]>("client/dashboard/fiches", {
+    signal,
+  });
+  return response.data;
 }

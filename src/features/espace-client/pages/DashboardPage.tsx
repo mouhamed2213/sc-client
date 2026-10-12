@@ -7,6 +7,11 @@ import { useClientUser } from "../layout/useClientUser";
 export default function DashboardPage() {
   const user = useClientUser();
   const navigate = useNavigate();
+
+
+  
+
+
   useEffect(() => {
     document.title = "Tableau de bord — Support Connecté";
   }, []);
