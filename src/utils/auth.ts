@@ -1,5 +1,3 @@
-import { API_URL } from "../data/auth";
-
 /*
   Appels d'authentification vers l'API Node.
   - POST /api/auth/login    { email, password }                               → { user }
@@ -22,29 +20,6 @@ export class AuthError extends Error {
     this.name = "AuthError";
     this.status = status;
   }
-}
-
-async function post<T>(
-  path: string,
-  body: Record<string, unknown>
-): Promise<T> {
-  let res: Response;
-  try {
-    res = await fetch(`${API_URL}${path}`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-  } catch {
-    throw new AuthError("network", 0); // réseau coupé, serveur injoignable ou CORS
-  }
-  const data = (await res.json().catch(() => ({}))) as { message?: string } & T;
-  if (!res.ok) throw new AuthError(data.message || "error", res.status);
-  return data;
 }
 
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;

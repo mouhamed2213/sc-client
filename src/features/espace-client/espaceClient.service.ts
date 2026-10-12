@@ -1,5 +1,5 @@
 // create fiche
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { api } from "../../lib/api";
 
 export async function createFiche(data: any) {
@@ -8,9 +8,11 @@ export async function createFiche(data: any) {
     return result.data;
   } catch (e) {
     if (axios.isAxiosError(e)) {
-      console.log(e.response?.data?.error?.message ?? "Une erreur est survenue.",);
-      
-      throw e.response?.data?.error?.message ?? "Une erreur est survenue."
+      console.log(
+        e.response?.data?.error?.message ?? "Une erreur est survenue."
+      );
+
+      throw e.response?.data?.error?.message ?? "Une erreur est survenue.";
     }
     return;
   }

@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from "react";
 import {
   Link,
+  Navigate,
   Outlet,
   Route,
   Routes,
@@ -16,8 +17,10 @@ import LoginPage from "./features/auth/pages/LoginPage"; // Importez votre page 
 import RegisterPage from "./features/auth/pages/RegisterPage";
 import { ResetPasswordPage } from "./features/auth/pages/ResetPasswordPage";
 import { VerifyMailPage } from "./features/auth/pages/VerifyMailPage";
-import { EspaceClientLayout } from "./features/espace-client/components/EspaceClientLayout";
-import { DashboardPage } from "./features/espace-client/pages/DashboardPage";
+import DashboardPage from "./features/espace-client/pages/DashboardPage";
+
+import ClientLayout from "./features/espace-client/layout/ClientLayout";
+import SettingsPage from "./features/espace-client/pages/SettingsPage";
 import AProposPage from "./pages/AProposPage";
 import BrandingPage from "./pages/BrandingPage";
 import CartesPage from "./pages/CartesPage";
@@ -130,15 +133,26 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
           {/* Pages espace client */}
-          <Route element={<EspaceClientLayout />}>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/espace-client" element={<DashboardPage />} />
-
-            {/* <Route path="" element={}/>
-          <Route path="" element={}/>
-          <Route path="" element={}/>
-          <Route path="" element={}/> */}
-          </Route>
+          <Routes>
+            <Route
+              path="/"
+              element={<Navigate to="/espace-client" replace />}
+            />
+            {/* <Route path="/espace-client" element={<ClientLayout user={USER} />}> */}
+            <Route
+              path="/espace-client"
+              element={
+                <ClientLayout
+                  user={{ email: "Changeme", name: "find the logic" }}
+                />
+              }
+            >
+              <Route index element={<DashboardPage />} />
+              {/* <Route path="fiches/:slug" element={<EditorPage />} /> */}
+              <Route path="parametres" element={<SettingsPage />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
 
           {/* Page 404 */}
           <Route path="*" element={<NotFound />} />
