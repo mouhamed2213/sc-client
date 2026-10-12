@@ -80,7 +80,7 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
               : "Vérifiez votre connexion puis réessayez."}
           </p>
           {expired ? (
-            <a className="db-copy" href="/connexion">
+            <a className="db-copy" href="/login">
               Se connecter
             </a>
           ) : (

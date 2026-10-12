@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect } from "react";
 import {
   Link,
-  Navigate,
   Outlet,
   Route,
   Routes,
@@ -101,7 +100,7 @@ export default function App() {
       <ScrollToTop />
       <Suspense fallback={<Wait />}>
         <Routes>
-          {/* Groupement des pages publiques dans le PublicLayout */}
+          {/* Pages publiques */}
           <Route element={<PublicLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/cartes-connectees" element={<CartesPage />} />
@@ -113,13 +112,9 @@ export default function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/creation-contenu" element={<ContenuPage />} />
             <Route path="/promoteur-immobilier" element={<ImmobilierPage />} />
-
-            {/* Pages légales */}
             {LEGAL_PATHS.map(p => (
               <Route key={p} path={p} element={<LegalPage path={p} />} />
             ))}
-
-            {/* Routes secteurs */}
             <Route path="/secteurs/immobilier" element={<ImmobilierPage />} />
             <Route path="/secteurs/:sector" element={<SectorRoute />} />
           </Route>
@@ -127,25 +122,16 @@ export default function App() {
           {/* Pages d'authentification */}
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
-
           <Route path="/verify-email" element={<VerifyMailPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
           {/* Pages espace client */}
-          <Routes>
-            <Route
-              path="/"
-              element={<Navigate to="/espace-client" replace />}
-            />
-            <Route path="/espace-client" element={<ClientLayout user={USER} />}>
-   
-              <Route index element={<DashboardPage />} />
-              {/* <Route path="fiches/:slug" element={<EditorPage />} /> */}
-              <Route path="parametres" element={<SettingsPage />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Route path="/espace-client" element={<ClientLayout />}>
+            <Route index element={<DashboardPage />} />
+            {/* <Route path="fiches/:slug" element={<EditorPage />} /> */}
+            <Route path="parametres" element={<SettingsPage />} />
+          </Route>
 
           {/* Page 404 */}
           <Route path="*" element={<NotFound />} />

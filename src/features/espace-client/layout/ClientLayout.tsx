@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Navigate, Outlet, useLocation } from "react-router-dom";
 import { apiPost } from "../lib/api";
 import "./layout.css";
-import type { ClientUser } from "./useClientUser";
+import { readClientUser } from "./useClientUser";
 
 /*
   Cadre de l'espace client : menu latéral (Tableau de bord, Paramètres) + zone de contenu (<Outlet />).
@@ -55,14 +55,9 @@ const NAV: {
   },
 ];
 
-export default function ClientLayout({
-  user,
-  children,
-}: {
-  user: ClientUser;
-  children?: ReactNode;
-}) {
+export default function ClientLayout({ children }: { children?: ReactNode }) {
   const { pathname } = useLocation();
+  const user = readClientUser();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -87,8 +82,12 @@ export default function ClientLayout({
     } catch {
       /* session déjà expirée : on quitte quand même */
     }
-    window.location.assign("/connexion");
+    localStorage.removeItem("client_token");
+    localStorage.removeItem("client_user");
+    window.location.assign("/login");
   };
+
+  if (!user) return <Navigate to="/login" replace state={{ from: pathname }} />;
 
   return (
     <div className={`cl${open ? " open" : ""}`}>

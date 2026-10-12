@@ -9,7 +9,7 @@ import { AFTER_LOGIN, A_LOGIN as T } from "../../../data/auth";
 import { EMAIL_RE, safePath } from "../../../utils/auth";
 import { login } from "../auth.service";
 
-// Page Connexion — /connexion (e-mail + mot de passe). ?from=/chemin ou state.from : retour à la page demandée.
+// Page Connexion — /login (e-mail + mot de passe). ?from=/chemin ou state.from : retour à la page demandée.
 type Errors = { email?: string; password?: string };
 
 export default function LoginPage() {

@@ -4,6 +4,17 @@ import { api } from "../../lib/api";
 import { ApiError } from "../../lib/apiError";
 import { IRegister, Login } from "../../types";
 
+interface LoginResponse {
+  user: {
+    id: number;
+    email: string;
+    nom: string;
+    role: "CLIENT" | "ADMIN";
+    emailVerified: boolean;
+  };
+  token: string;
+}
+
 export const register = async (registerData: IRegister) => {
   try {
     const res = await api.post("/auth/register", {
@@ -28,11 +39,16 @@ export const register = async (registerData: IRegister) => {
 
 export const login = async (loginData: Login) => {
   try {
-    const res = await api.post("/auth/login", loginData);
+    const res = await api.post<LoginResponse>("/auth/login", loginData);
 
-    const token = res.data.token;
-
-    localStorage.setItem("client_token", token);
+    localStorage.setItem("client_token", res.data.token);
+    localStorage.setItem(
+      "client_user",
+      JSON.stringify({
+        name: res.data.user.nom,
+        email: res.data.user.email,
+      })
+    );
 
     return res.data;
   } catch (error) {
