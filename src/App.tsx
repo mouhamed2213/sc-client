@@ -16,8 +16,8 @@ import LoginPage from "./features/auth/pages/LoginPage"; // Importez votre page 
 import RegisterPage from "./features/auth/pages/RegisterPage";
 import { ResetPasswordPage } from "./features/auth/pages/ResetPasswordPage";
 import { VerifyMailPage } from "./features/auth/pages/VerifyMailPage";
-import { EspaceClientLayout } from "./features/dashboard/components/EspaceClientLayout";
-import { DashboardPage } from "./features/dashboard/pages/DashboardPage";
+import { EspaceClientLayout } from "./features/espace-client/components/EspaceClientLayout";
+import { DashboardPage } from "./features/espace-client/pages/DashboardPage";
 import AProposPage from "./pages/AProposPage";
 import BrandingPage from "./pages/BrandingPage";
 import CartesPage from "./pages/CartesPage";

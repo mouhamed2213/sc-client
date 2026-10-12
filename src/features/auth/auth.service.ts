@@ -1,4 +1,5 @@
 import axios from "axios";
+import { redirect } from "react-router-dom";
 import { api } from "../../lib/api";
 import { ApiError } from "../../lib/apiError";
 import { IRegister, Login } from "../../types";
@@ -28,6 +29,11 @@ export const register = async (registerData: IRegister) => {
 export const login = async (loginData: Login) => {
   try {
     const res = await api.post("/auth/login", loginData);
+
+    const token = res.data.token;
+
+    localStorage.setItem("client_token", token);
+
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -40,4 +46,10 @@ export const login = async (loginData: Login) => {
 
     throw error;
   }
+};
+
+export const logout = () => {
+  // clean localstorage
+  localStorage.clear();
+  return redirect("/login");
 };
