@@ -1,5 +1,7 @@
+import { useMutation } from "@tanstack/react-query";
 import type { ChangeEvent, FormEvent, ReactNode } from "react";
 import { useId, useRef, useState } from "react";
+import { createFiche } from "../espaceClient.service";
 import "../styles/create-fiche-form.css";
 
 // Formulaire de création d'une fiche → POST {apiUrl}/fiches
@@ -100,7 +102,7 @@ const isFieldKey = (k: string): k is FieldKey => k in EMPTY;
 
 const readToken = (): string | null => {
   try {
-    return localStorage.getItem("client_token"); 
+    return localStorage.getItem("client_token");
   } catch {
     return null;
   }
@@ -140,7 +142,7 @@ export default function CreateFicheForm({
   const [values, setValues] = useState<Values>(EMPTY);
   const [sameWhatsapp, setSameWhatsapp] = useState(true);
   const [errors, setErrors] = useState<Errors>({});
-  const [formError, setFormError] = useState("");
+  const [formError, setFormError] = useState<any>("");
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState<CreatedFiche | null>(null);
 
@@ -166,7 +168,7 @@ export default function CreateFicheForm({
     setErrors(errs);
     if (Object.values(errs).some(Boolean)) return focusFirst(errs);
 
-    const token = getToken();
+    const token = localStorage.getItem("client_token");
     if (!token) {
       setFormError("Connecte-toi pour créer une fiche.");
       onUnauthorized?.();
@@ -188,56 +190,21 @@ export default function CreateFicheForm({
     if (wa) body.whatsapp = wa;
 
     setLoading(true);
-    try {
-      const res = await fetch(`${apiUrl}/fiches`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(body),
-      });
-      const json = (await res.json().catch(() => null)) as {
-        fiche?: CreatedFiche;
-        error?: ApiError;
-      } | null;
-
-      if (res.ok && json?.fiche) {
-        if (onCreated) onCreated(json.fiche);
-        else setCreated(json.fiche);
-        return;
-      }
-
-      const err = json?.error;
-      if (res.status === 401) {
-        setFormError("Ta session a expiré. Reconnecte-toi pour continuer.");
-        onUnauthorized?.();
-      } else if (res.status === 400 && Array.isArray(err?.details)) {
-        // Erreurs champ par champ renvoyées par le serveur : { champ, message }
-        const byField: Errors = {};
-        for (const d of err.details)
-          if (isFieldKey(d.champ)) byField[d.champ] = d.message;
-        setErrors(byField);
-        if (Object.keys(byField).length) focusFirst(byField);
-        else setFormError("Certaines informations sont invalides.");
-      } else if (res.status === 403 && err?.code === "LIMITE_FICHES") {
-        setFormError(
-          err.message ?? "Tu as atteint le nombre maximum de fiches."
-        );
-      } else {
-        setFormError(
-          err?.message ||
-            "La fiche n'a pas pu être créée. Réessaie dans un instant."
-        );
-      }
-    } catch {
-      setFormError(
-        "Impossible de joindre le serveur. Vérifie ta connexion puis réessaie."
-      );
-    } finally {
-      setLoading(false);
-    }
+    mutate(body);
   }
+
+  const { mutate, isSuccess, isError, error } = useMutation({
+    mutationFn: createFiche,
+    onSuccess: () => {
+
+      // hide modal 
+      setLoading(false);
+    },
+
+    onError: e => {
+      setFormError(e);
+    },
+  });
 
   if (created) {
     const url = `${publicBaseUrl}/f/${created.slug}`;

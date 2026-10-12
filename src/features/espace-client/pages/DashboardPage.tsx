@@ -5,14 +5,6 @@ export const DashboardPage = () => {
       <h1>Espace client</h1>
       <h1>Espace client</h1>
       <h1>Espace client</h1>
-      <h1>Espace client</h1>
-      <h1>Espace client</h1>
-      <h1>Espace client</h1>
-      <h1>Espace client</h1>
-      <h1>Espace client</h1>
-      <h1>Espace client</h1>
-      <h1>Espace client</h1>
-      <h1>Espace client</h1>
     </>
   );
 };
