@@ -418,7 +418,7 @@ export interface Horaire {
   horaire: string;
 }
 export interface Photo {
-  type: "image";
+  type: "image" | "video";
   url: string;
   alt?: string;
 }
@@ -468,6 +468,8 @@ export interface FicheRecord {
   id: number;
   slug: string;
   formule: Formule;
+  planCapabilities?: Plan | null;
+  expiree?: boolean;
   statut: string;
   enLigneSeule: boolean;
   prenom: string;
