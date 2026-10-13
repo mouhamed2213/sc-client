@@ -21,10 +21,8 @@ export default function DashboardPage() {
         const fiche = fiches.find(item => item.slug === slug);
         if (fiche) navigate(`/espace-client/fiche/preview/${fiche.id}`);
       }}
-      // L'éditeur de démonstration n'est pas encore connecté à l'API.
-      onEdit={slug => {
-        if (FICHES.some(fiche => fiche.slug === slug))
-          navigate(`/espace-client/fiches/${slug}`);
+      onEdit={ficheId => {
+        navigate(`/espace-client/editeur/${ficheId}`);
       }}
     />
   );
