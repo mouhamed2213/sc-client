@@ -30,25 +30,26 @@ export const STATUTS_FICHE = ["ACTIVE", "SUSPENDUE"] as const;
 export type StatutFiche = (typeof STATUTS_FICHE)[number];
 
 export const SECTEURS = [
-  "RESTAURANT",
-  "IMMOBILIER",
-  "COMMERCE",
-  "HOTEL",
-  "INDEPENDANT",
-  "BEAUTE",
+  "restaurant",
+  "immobilier",
+  "commerce",
+  "hotel",
+  "independant",
+  "beaute",
 ] as const;
 export type Secteur = (typeof SECTEURS)[number];
 
 export const PREMIERS_BOUTONS = ["WHATSAPP", "APPEL", "EMAIL"] as const;
 export type PremierBouton = (typeof PREMIERS_BOUTONS)[number];
 
-export const DISPOSITIONS = ["PORTRAIT", "LOGO", "BANNIERE", "DUO"] as const;
+export const DISPOSITIONS = ["portrait", "logo", "banniere", "duo"] as const;
+
 export type Disposition = (typeof DISPOSITIONS)[number];
 
-export const TAILLES = ["S", "M", "L"] as const;
+export const TAILLES = ["s", "m", "l"] as const;
 export type Taille = (typeof TAILLES)[number];
 
-export const THEMES = ["OR", "CLAIR", "BLEU", "NUIT"] as const;
+export const THEMES = ["or", "clair", "bleu", "nuit"] as const;
 export type Theme = (typeof THEMES)[number];
 
 export const TAB_TYPES = [
@@ -67,7 +68,6 @@ export const TAB_TYPES = [
   "LOCALISATION",
   "TEXTE",
 ] as const;
-export type TabType = (typeof TAB_TYPES)[number];
 
 export const MEDIA_TYPES = ["IMAGE", "VIDEO"] as const;
 export type MediaType = (typeof MEDIA_TYPES)[number];
@@ -237,13 +237,13 @@ export interface PlanLimit {
 }
 
 export interface Plan {
-  id: number;
-  type: PlanType;
-  nom: string;
-  themeDefaut: Theme;
-  prixFcfa: number | null;
-  dureeMois: number | null; // null = sans échéance
-  actif: boolean;
+  id?: number;
+  type?: PlanType;
+  nom?: string;
+  themeDefaut?: Theme;
+  prixFcfa?: number | null;
+  dureeMois?: number | null; // null = sans échéance
+  actif?: boolean;
   limits?: PlanLimit | null;
 }
 
@@ -373,4 +373,168 @@ export interface ApiErrorBody {
   message: string;
   statusCode?: number;
   data?: unknown;
+}
+
+/*---------------------------------- FICHE*/
+// Modèle de données des fiches connectées (même structure que l'API fiches.getBySlug + champs V2).
+export type Formule = "essentielle" | "pro" | "signature";
+export type TabType =
+  | "presentation"
+  | "menu"
+  | "biens"
+  | "catalogue"
+  | "galerie"
+  | "videos"
+  | "liens"
+  | "rendezvous"
+  | "rappel"
+  | "horaires"
+  | "avis"
+  | "reseaux"
+  | "localisation"
+  | "texte";
+
+export interface Onglet {
+  id: string;
+  type: TabType;
+  titre?: string;
+  contenu?: string;
+  visible?: boolean;
+}
+export interface Entete {
+  disposition?: Disposition;
+  taille?: Taille;
+  theme?: Theme;
+  couverture?: string;
+}
+/** Entête après application des valeurs par défaut de la formule. */
+export interface EnteteComplete {
+  disposition: Disposition;
+  taille: Taille;
+  theme: Theme;
+  couverture?: string;
+}
+export interface Lien {
+  label: string;
+  url: string;
+}
+export interface Horaire {
+  jour: string;
+  horaire: string;
+}
+export interface Photo {
+  type: "image";
+  url: string;
+  alt?: string;
+}
+export interface Article {
+  nom: string;
+  description?: string;
+  photo?: string;
+  prix?: string;
+  devise?: string;
+  badge?: string;
+}
+export interface SectionCatalogue {
+  titre: string;
+  articles: Article[];
+}
+export interface Plat {
+  nom: string;
+  prix?: string;
+  description?: string;
+  image?: string;
+  video?: string;
+  videoWebm?: string;
+  badge?: string;
+}
+export interface SectionMenu {
+  titre: string;
+  plats: Plat[];
+}
+
+export interface FicheData {
+  secteur?: Secteur;
+  premierBouton?: string;
+  messageWhatsapp?: string;
+  presentation?: string;
+  reseauxSociaux?: Lien[];
+  liens?: Lien[];
+  horaires?: Horaire[];
+  galerie?: Photo[];
+  sections?: SectionCatalogue[];
+  menu?: { sections: SectionMenu[] };
+  biens?: Bien[];
+  rendezVous?: { label: string; url: string };
+  onglets?: Onglet[];
+  entete?: Entete;
+}
+export interface FicheRecord {
+  id: number;
+  slug: string;
+  formule: Formule;
+  statut: string;
+  enLigneSeule: boolean;
+  prenom: string;
+  nom: string;
+  fonction: string;
+  entreprise: string;
+  photo: string;
+  logo: string;
+  telephone: string;
+  whatsapp: string;
+  email: string;
+  site: string;
+  adresse: string;
+  googlePlaceId: string;
+  dateEcheance: string | null;
+  scansTotal: number;
+  data: FicheData;
+}
+
+/** Droits d'une formule (à dupliquer côté serveur). Les limites absentes = fonction non incluse. */
+export interface Plan {
+  label: string;
+  theme: Theme;
+  tabs: TabType[];
+  canReorder: boolean;
+  canHide: boolean;
+  canAdd: boolean;
+  canRename: boolean;
+  maxPresentation: number;
+  maxSocial: number;
+  maxLinks: number;
+  maxPhotos: number;
+  maxVideos: number;
+  maxCustomTabs?: number;
+  hasGoogleReview: boolean;
+  hasCatalog: boolean;
+  maxCatalogSections?: number;
+  maxCatalogArticlesPerSection?: number;
+  catalogPrices: boolean;
+  hasMenu?: boolean;
+  maxMenuSections?: number;
+  maxMenuItemsPerSection?: number;
+  menuVideoPerItem?: boolean;
+  maxMenuVideoSeconds?: number;
+  hasBiens?: boolean;
+  maxBiens?: number;
+  maxPhotosPerBien?: number;
+  hasForm?: boolean;
+  hasStats: boolean;
+  hasDashboard?: boolean;
+  headerLayouts: Disposition[];
+  themes: Theme[];
+}
+export interface TabTypeInfo {
+  label: string;
+  icon: string;
+  hint?: string;
+}
+export interface Template {
+  label: string;
+  icon: string;
+  tabs: TabType[];
+  titles: Partial<Record<TabType, string>>;
+  entete: { disposition: Disposition; taille: Taille };
 }
