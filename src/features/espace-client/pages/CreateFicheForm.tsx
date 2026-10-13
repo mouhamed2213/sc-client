@@ -4,7 +4,7 @@ import { useId, useRef, useState } from "react";
 import { createFiche } from "../espaceClient.service";
 import "../styles/create-fiche-form.css";
 
-// Formulaire de création d'une fiche → POST {apiUrl}/fiches
+// Formulaire de création d’une fiche → POST /api/fiches
 // Une fiche naît toujours en formule Essentielle : on ne demande donc que l'identité.
 // Présentation, réseaux, localisation se renseignent ensuite dans l'éditeur ;
 // liens, galerie, catalogue, menu… s'ouvrent quand le client passe en Pro ou Signature.
@@ -23,9 +23,7 @@ export interface CreatedFiche {
 }
 
 export interface CreateFicheFormProps {
-  /** Base de l'API. Défaut : VITE_API_URL, sinon http://localhost:4000/api */
-  apiUrl?: string;
-  /** Retourne le JWT du client connecté. Défaut : localStorage.getItem('token') */
+  /** Retourne le jeton du client connecté. */
   getToken?: () => string | null | undefined;
   /** Appelée avec la fiche créée (ex. rediriger vers l'éditeur). Sans elle, le formulaire affiche l'adresse publique. */
   onCreated?: (fiche: CreatedFiche) => void;
@@ -47,17 +45,7 @@ type TextKey = Exclude<FieldKey, "secteur">;
 type Values = Record<FieldKey, string>;
 type Errors = Partial<Record<FieldKey, string>>;
 
-interface ApiError {
-  code?: string;
-  message?: string;
-  details?: { champ: string; message: string }[];
-}
-
 // ───────── Constantes ─────────
-
-const viteEnv = (import.meta as unknown as { env?: { VITE_API_URL?: string } })
-  .env;
-const API_URL = viteEnv?.VITE_API_URL || "http://localhost:4000/api";
 
 const SECTEURS = [
   { value: "restaurant", label: "Restaurant" },
@@ -98,8 +86,6 @@ const EMPTY: Values = {
   secteur: "",
 };
 
-const isFieldKey = (k: string): k is FieldKey => k in EMPTY;
-
 const readToken = (): string | null => {
   try {
     return localStorage.getItem("client_token");
@@ -129,7 +115,6 @@ function validate(v: Values, sameWhatsapp: boolean): Errors {
 // ───────── Composant ─────────
 
 export default function CreateFicheForm({
-  apiUrl = API_URL,
   getToken = readToken,
   onCreated,
   onUnauthorized,
@@ -142,7 +127,7 @@ export default function CreateFicheForm({
   const [values, setValues] = useState<Values>(EMPTY);
   const [sameWhatsapp, setSameWhatsapp] = useState(true);
   const [errors, setErrors] = useState<Errors>({});
-  const [formError, setFormError] = useState<any>("");
+  const [formError, setFormError] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState<CreatedFiche | null>(null);
 
@@ -168,7 +153,7 @@ export default function CreateFicheForm({
     setErrors(errs);
     if (Object.values(errs).some(Boolean)) return focusFirst(errs);
 
-    const token = localStorage.getItem("client_token");
+    const token = getToken();
     if (!token) {
       setFormError("Connecte-toi pour créer une fiche.");
       onUnauthorized?.();
@@ -193,21 +178,37 @@ export default function CreateFicheForm({
     mutate(body);
   }
 
-  const { mutate, isSuccess, isError, error } = useMutation({
+  const { mutate } = useMutation({
     mutationFn: createFiche,
-    onSuccess: () => {
-
-      // hide modal 
+    onSuccess: response => {
       setLoading(false);
+      const fiche = (response?.fiche ?? response?.data ?? response) as CreatedFiche;
+      if (fiche?.slug) {
+        setCreated(fiche);
+        onCreated?.(fiche);
+      } else {
+        setFormError("La fiche a été créée, mais sa réponse est incomplète. Actualise le tableau de bord pour la retrouver.");
+      }
     },
-
-    onError: e => {
-      setFormError(e);
+    onError: error => {
+      setLoading(false);
+      const details =
+        typeof error === "object" && error !== null
+          ? (error as { response?: { status?: number; data?: { error?: { message?: string }; message?: string } } }).response
+          : undefined;
+      const message =
+        typeof error === "string"
+          ? error
+          : details?.data?.error?.message ??
+            details?.data?.message ??
+            (error instanceof Error ? error.message : "La création de la fiche a échoué. Réessaie.");
+      setFormError(message);
+      if (details?.status === 401 || /401|non autoris|session|connect/i.test(message)) onUnauthorized?.();
     },
   });
 
   if (created) {
-    const url = `${publicBaseUrl}/f/${created.slug}`;
+    const url = `${publicBaseUrl}/fiche/${created.slug}`;
     return (
       <div className="cf">
         <PlanBar />

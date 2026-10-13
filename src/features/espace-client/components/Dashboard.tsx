@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import CreateFicheForm from "../pages/CreateFicheForm";
+import { dashboardFichesKey } from "../hooks/useDashboardFiches";
 import "../../espace-client/styles/dashboard.css";
 import { useDashboardFiches } from "../hooks/useDashboardFiches";
 import { ApiError } from "../lib/api";
@@ -62,6 +65,51 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
   } = useDashboardFiches();
   const [sel, setSel] = useState<string>();
   const [copied, setCopied] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const handleCreated = () => {
+    setCreateOpen(false);
+    void queryClient.invalidateQueries({ queryKey: dashboardFichesKey });
+  };
+
+  const createDialog = createOpen ? (
+    <div
+      className="db-modal-backdrop"
+      onMouseDown={event => {
+        if (event.target === event.currentTarget) setCreateOpen(false);
+      }}
+    >
+      <section
+        className="db-create-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="db-create-title"
+      >
+        <header className="db-create-modal-head">
+          <div>
+            <p className="db-k">Nouvelle fiche</p>
+            <h2 id="db-create-title">Créer une fiche connectée</h2>
+          </div>
+          <button
+            type="button"
+            className="db-create-close"
+            onClick={() => setCreateOpen(false)}
+            aria-label="Fermer la fenêtre de création"
+          >
+            ×
+          </button>
+        </header>
+        <CreateFicheForm
+          onCreated={handleCreated}
+          onUnauthorized={() => {
+            setCreateOpen(false);
+            window.location.assign("/login");
+          }}
+        />
+      </section>
+    </div>
+  ) : null;
 
   if (isPending) return <Skeleton />;
   if (isError) {
@@ -101,11 +149,12 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
       <div className="db">
         <div className="db-state">
           <h2>Aucune fiche pour le moment</h2>
-          <p>
-            Aucune fiche n’est rattachée à votre compte. Contactez Support
-            Connecté avec le code de votre carte.
-          </p>
+          <p>Créez votre première fiche connectée pour commencer à la personnaliser.</p>
+          <button className="db-create-btn" onClick={() => setCreateOpen(true)}>
+            + Créer ma fiche
+          </button>
         </div>
+        {createDialog}
       </div>
     );
 
@@ -132,9 +181,16 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
   return (
     <div className="db">
       <header className="db-head">
-        <p className="db-k">Espace client</p>
-        <h1>Bonjour {user.name.split(" ")[0]}</h1>
-        <p className="db-sub">Voici l’état de vos fiches connectées.</p>
+        <div className="db-head-row">
+          <div>
+            <p className="db-k">Espace client</p>
+            <h1>Bonjour {user.name.split(" ")[0]}</h1>
+            <p className="db-sub">Voici l’état de vos fiches connectées.</p>
+          </div>
+          <button className="db-create-btn" onClick={() => setCreateOpen(true)}>
+            + Créer une fiche
+          </button>
+        </div>
       </header>
 
       {alerts.length > 0 && (
@@ -280,6 +336,7 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
           </div>
         </aside>
       </div>
+      {createDialog}
     </div>
   );
 }
