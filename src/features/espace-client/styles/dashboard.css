@@ -71,3 +71,24 @@
 /* ---- Paramètres ---- */
 .st-dl{margin:0 0 12px;display:grid;gap:12px}.st-dl div{display:grid;gap:2px}
 .st-dl dt{font:700 10.5px Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#777}.st-dl dd{margin:0;font-weight:600}
+
+
+/* Creation d'une fiche depuis le tableau de bord */
+.db-head-row{display:flex;align-items:center;justify-content:space-between;gap:18px}
+.db-create-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:10px 16px;border:1px solid #08090a;border-radius:24px;background:#08090a;color:#fff;font:700 13px Inter,sans-serif;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s}
+.db-create-btn:hover{background:#ef1733;border-color:#ef1733}
+.db-create-btn:focus-visible,.db-create-close:focus-visible{outline:3px solid #ef1733;outline-offset:3px}
+.db-modal-backdrop{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(8,9,10,.68);overflow-y:auto}
+.db-create-modal{position:relative;width:min(100%,600px);max-height:calc(100dvh - 48px);overflow-y:auto;border-radius:18px;background:#f6f4f0;box-shadow:0 24px 80px rgba(0,0,0,.3);padding:20px}
+.db-create-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:16px}
+.db-create-modal-head .db-k{margin:0 0 4px}
+.db-create-modal-head h2{margin:0;font:600 clamp(22px,3vw,28px)/1.15 'Cormorant Garamond',Georgia,serif}
+.db-create-close{flex:none;width:36px;height:36px;border:1px solid #e3dfd8;border-radius:50%;background:#fff;color:#08090a;font-size:26px;line-height:1;cursor:pointer}
+.db-create-modal .cf{max-width:none}
+.db-create-modal .cf-plan{border-radius:12px 12px 0 0}
+.db-create-modal .cf-box{border-radius:0 0 12px 12px}
+@media(max-width:640px){
+  .db-head-row{align-items:flex-start;flex-direction:column}
+  .db-modal-backdrop{align-items:flex-start;padding:10px}
+  .db-create-modal{max-height:calc(100dvh - 20px);padding:14px;border-radius:14px}
+}
