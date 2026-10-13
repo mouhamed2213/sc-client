@@ -189,3 +189,12 @@
   .f-acts a { padding:9px 5px; font-size:10px; }
   .f-dishes { gap:8px; }
 }
+
+/* Normalisation limitée à la fiche : ne modifie pas les autres écrans. */
+.fiche a { color: inherit; text-decoration: none; }
+.fiche button, .fiche input, .fiche select, .fiche textarea { font: inherit; color: inherit; }
+.f-menu, .f-cat, .f-biens, .f-car { min-width: 0; }
+.f-menu { color: var(--tx); }
+.f-cat { min-width: 0; }
+.f-biens { min-width: 0; }
+.f-btn.gold { background: var(--btn); color: var(--btn-tx); }
