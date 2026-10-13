@@ -50,7 +50,6 @@ function Skeleton() {
       </div>
       <div className="db-sk l" />
       <div className="db-sk l" />
-      {createDialog}
     </div>
   );
 }
