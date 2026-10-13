@@ -261,31 +261,30 @@ export default function CreateFicheForm({
           </p>
         )}
 
-        <div className="cf-grid">
-          <div className="cf-grid cf-two">
-            <div className="cf-field">
-              <label htmlFor={id("prenom")}>Prénom ou nom de l'activité</label>
-              <input
-                className="cf-input"
-                type="text"
-                autoComplete="given-name"
-                required
-                {...field("prenom")}
-              />
-              {err("prenom")}
-            </div>
-            <div className="cf-field">
-              <label htmlFor={id("nom")}>
-                Nom <span className="cf-opt">(facultatif)</span>
-              </label>
-              <input
-                className="cf-input"
-                type="text"
-                autoComplete="family-name"
-                {...field("nom")}
-              />
-              {err("nom")}
-            </div>
+        <div className="cf-grid cf-form-grid">
+          <div className="cf-field">
+            <label htmlFor={id("prenom")}>Prénom ou nom de l'activité</label>
+            <input
+              className="cf-input"
+              type="text"
+              autoComplete="given-name"
+              required
+              {...field("prenom")}
+            />
+            {err("prenom")}
+          </div>
+
+          <div className="cf-field">
+            <label htmlFor={id("nom")}>
+              Nom <span className="cf-opt">(facultatif)</span>
+            </label>
+            <input
+              className="cf-input"
+              type="text"
+              autoComplete="family-name"
+              {...field("nom")}
+            />
+            {err("nom")}
           </div>
 
           <div className="cf-field">
@@ -351,7 +350,7 @@ export default function CreateFicheForm({
             {err("telephone")}
           </div>
 
-          <div className="cf-field">
+          <div className="cf-field cf-field-full">
             <label htmlFor={id("whatsapp")}>
               WhatsApp <span className="cf-opt">(facultatif)</span>
             </label>
