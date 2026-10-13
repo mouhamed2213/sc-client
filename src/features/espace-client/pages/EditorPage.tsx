@@ -41,8 +41,8 @@ export default function EditorPage() {
         const response = await api.get<{ fiche: ApiFicheDetail }>(`fiches/${ficheId}`, { signal });
         return toFicheRecord(response.data.fiche);
       }
-      const response = await api.get<{ fiches: ApiFicheDetail[] }>("fiches", { signal });
-      const first = response.data.fiches?.[0];
+      const response = await api.get<ApiFicheDetail[]>("client/dashboard/fiches", { signal });
+      const first = response.data?.[0];
       if (!first) return null;
       navigate(`/espace-client/editeur/${first.id}`, { replace: true });
       return toFicheRecord(first);
@@ -133,6 +133,7 @@ export default function EditorPage() {
     setTabs([...tabs, { id: newId(type), type, visible: true }]);
   };
 
+  if (id && (!Number.isInteger(ficheId) || (ficheId ?? 0) <= 0)) return <div className="ed-state" role="alert"><h1>Identifiant invalide</h1><p>L’identifiant de cette fiche n’est pas valide.</p><Link to="/espace-client">Retour au tableau de bord</Link></div>;
   if (!id && ficheQuery.data === null && !ficheQuery.isPending) return <div className="ed-state"><h1>Aucune fiche à modifier</h1><p>Créez d’abord une fiche depuis le tableau de bord.</p><Link to="/espace-client">Retour au tableau de bord</Link></div>;
   if (ficheQuery.isPending) return <div className="ed-state" role="status">Chargement de l’éditeur…</div>;
   if (ficheQuery.isError) {
