@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
 import { isAxiosError } from "axios";
+import { Link, useParams } from "react-router-dom";
 import { api } from "../../../lib/api";
-import Fiche from "../components/Fiche";
 import type { FicheRecord, Formule } from "../../../types";
+import Fiche from "../components/Fiche";
 
 type ApiFicheDetail = {
   id: number;
@@ -81,7 +81,8 @@ function toFicheRecord(dto: ApiFicheDetail): FicheRecord {
       premierBouton: data.premierBouton as string | undefined,
       messageWhatsapp: data.messageWhatsapp as string | undefined,
       presentation: data.presentation as string | undefined,
-      reseauxSociaux: data.reseauxSociaux as FicheRecord["data"]["reseauxSociaux"],
+      reseauxSociaux:
+        data.reseauxSociaux as FicheRecord["data"]["reseauxSociaux"],
       liens: data.liens as FicheRecord["data"]["liens"],
       horaires: data.horaires as FicheRecord["data"]["horaires"],
       galerie,
@@ -129,7 +130,11 @@ export function FichePage() {
   }
 
   if (isPending) {
-    return <p className="fiche-preview-state" role="status">Chargement de la prévisualisation…</p>;
+    return (
+      <p className="fiche-preview-state" role="status">
+        Chargement de la prévisualisation…
+      </p>
+    );
   }
 
   if (isError) {
@@ -152,7 +157,9 @@ export function FichePage() {
             {isFetching ? "Chargement…" : "Réessayer"}
           </button>
         )}
-        <p><Link to="/espace-client">Retour au tableau de bord</Link></p>
+        <p>
+          <Link to="/espace-client">Retour au tableau de bord</Link>
+        </p>
       </div>
     );
   }
@@ -162,7 +169,9 @@ export function FichePage() {
   }
 
   return (
-    <section aria-label={`Prévisualisation de la fiche de ${fiche.prenom} ${fiche.nom}`}>
+    <section
+      aria-label={`Prévisualisation de la fiche de ${fiche.prenom} ${fiche.nom}`}
+    >
       <div className="fiche-preview-toolbar">
         <Link to="/espace-client">← Retour au tableau de bord</Link>
         <span>Prévisualisation privée · aucun passage comptabilisé</span>
