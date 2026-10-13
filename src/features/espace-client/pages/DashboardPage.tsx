@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { FICHES } from "../../../data/fiches";
 import Dashboard from "../components/Dashboard";
 import { useDashboardFiches } from "../hooks/useDashboardFiches";
 import { useClientUser } from "../layout/useClientUser";
@@ -20,9 +21,10 @@ export default function DashboardPage() {
         const fiche = fiches.find(item => item.slug === slug);
         if (fiche) navigate(`/espace-client/fiche/preview/${fiche.id}`);
       }}
-      // L'éditeur reste séparé de la prévisualisation et utilise encore les fiches de démonstration.
+      // L'éditeur de démonstration n'est pas encore connecté à l'API.
       onEdit={slug => {
-        navigate(`/espace-client/fiches/${slug}`);
+        if (FICHES.some(fiche => fiche.slug === slug))
+          navigate(`/espace-client/fiches/${slug}`);
       }}
     />
   );
