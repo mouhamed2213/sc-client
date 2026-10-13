@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { Link, useParams } from "react-router-dom";
+import { useRef } from "react";
 import { api } from "../../../lib/api";
 import type { FicheRecord, Formule } from "../../../types";
 import Fiche from "../components/Fiche";
@@ -99,6 +100,7 @@ function toFicheRecord(dto: ApiFicheDetail): FicheRecord {
 export function FichePage() {
   const { id } = useParams<{ id: string }>();
   const ficheId = Number(id);
+  const phoneScroller = useRef<HTMLDivElement>(null);
 
   const {
     data: fiche,
@@ -176,7 +178,13 @@ export function FichePage() {
         <Link to="/espace-client">← Retour au tableau de bord</Link>
         <span>Prévisualisation privée · aucun passage comptabilisé</span>
       </div>
-      <Fiche fiche={fiche} />
+      <div className="fiche-preview-stage">
+        <div className="fiche-preview-device">
+          <div className="fiche-preview-device-in" ref={phoneScroller}>
+            <Fiche key={fiche.id} fiche={fiche} scrollerRef={phoneScroller} />
+          </div>
+        </div>
+      </div>
     </section>
   );
 }

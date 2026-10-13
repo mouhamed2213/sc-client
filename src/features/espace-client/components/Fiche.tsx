@@ -12,6 +12,7 @@ import type {
 } from "../../../types";
 import { qrMatrix } from "../../../utils/qr";
 import { downloadVCard } from "../lib/vcard";
+import "./Fiche.css";
 
 /*
   Fiche connectée V2 (page publique ouverte par la carte NFC / le QR).
