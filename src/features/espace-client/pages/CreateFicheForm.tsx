@@ -4,7 +4,7 @@ import { useId, useRef, useState } from "react";
 import { createFiche } from "../espaceClient.service";
 import "../styles/create-fiche-form.css";
 
-// Formulaire de création d'une fiche → POST {apiUrl}/fiches
+// Formulaire de création d’une fiche → POST /api/fiches
 // Une fiche naît toujours en formule Essentielle : on ne demande donc que l'identité.
 // Présentation, réseaux, localisation se renseignent ensuite dans l'éditeur ;
 // liens, galerie, catalogue, menu… s'ouvrent quand le client passe en Pro ou Signature.
