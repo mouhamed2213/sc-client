@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import "../../espace-client/styles/dashboard.css";
+import "../../../styles/dashboard.css";
 import {
   dashboardFichesKey,
   useDashboardFiches,

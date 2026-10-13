@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import "../../espace-client/styles/dashboard.css";
+import "../../../styles/dashboard.css";
 import { useClientUser } from "../layout/useClientUser";
 
 // Page Paramètres : socle prêt à accueillir profil, mot de passe, notifications.

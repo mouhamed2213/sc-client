@@ -1,8 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
 import type { ChangeEvent, FormEvent, ReactNode } from "react";
 import { useId, useRef, useState } from "react";
+import "../../../styles/create-fiche-form.css";
 import { createFiche } from "../espaceClient.service";
-import "../styles/create-fiche-form.css";
 
 // Formulaire de création d’une fiche → POST /api/fiches
 // Une fiche naît toujours en formule Essentielle : on ne demande donc que l'identité.
@@ -182,28 +182,45 @@ export default function CreateFicheForm({
     mutationFn: createFiche,
     onSuccess: response => {
       setLoading(false);
-      const fiche = (response?.fiche ?? response?.data ?? response) as CreatedFiche;
+      const fiche = (response?.fiche ??
+        response?.data ??
+        response) as CreatedFiche;
       if (fiche?.slug) {
         setCreated(fiche);
         onCreated?.(fiche);
       } else {
-        setFormError("La fiche a été créée, mais sa réponse est incomplète. Actualise le tableau de bord pour la retrouver.");
+        setFormError(
+          "La fiche a été créée, mais sa réponse est incomplète. Actualise le tableau de bord pour la retrouver."
+        );
       }
     },
     onError: error => {
       setLoading(false);
       const details =
         typeof error === "object" && error !== null
-          ? (error as { response?: { status?: number; data?: { error?: { message?: string }; message?: string } } }).response
+          ? (
+              error as {
+                response?: {
+                  status?: number;
+                  data?: { error?: { message?: string }; message?: string };
+                };
+              }
+            ).response
           : undefined;
       const message =
         typeof error === "string"
           ? error
-          : details?.data?.error?.message ??
+          : (details?.data?.error?.message ??
             details?.data?.message ??
-            (error instanceof Error ? error.message : "La création de la fiche a échoué. Réessaie.");
+            (error instanceof Error
+              ? error.message
+              : "La création de la fiche a échoué. Réessaie."));
       setFormError(message);
-      if (details?.status === 401 || /401|non autoris|session|connect/i.test(message)) onUnauthorized?.();
+      if (
+        details?.status === 401 ||
+        /401|non autoris|session|connect/i.test(message)
+      )
+        onUnauthorized?.();
     },
   });
 

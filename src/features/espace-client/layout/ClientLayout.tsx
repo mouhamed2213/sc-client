@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Link, Navigate, Outlet, useLocation } from "react-router-dom";
+import "../../../styles/layout.css";
 import { apiPost } from "../lib/api";
-import "../styles/layout.css";
 import { readClientUser } from "./useClientUser";
 
 /*
