@@ -130,10 +130,7 @@ export default function App() {
           {/* Pages espace client */}
           <Route path="/espace-client" element={<ClientLayout />}>
             <Route index element={<DashboardPage />} />
-            <Route path="fiche/preview/:slug" element={<FichePage />} />
-            {/* <Route path="/fiches/preview/:id" element={<SettingsPage />} /> */}
-
-            {/* <Route path="fiches/:slug" element={<EditorPage />} /> */}
+            <Route path="fiche/preview/:id" element={<FichePage />} />
             <Route path="parametres" element={<SettingsPage />} />
           </Route>
 
