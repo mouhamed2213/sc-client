@@ -25,7 +25,7 @@ import {
 */
 interface Props {
   user: { name: string };
-  onEdit: (slug: string) => void;
+  onEdit: (ficheId: number) => void;
   onView: (slug: string) => void;
 }
 
@@ -275,7 +275,7 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
                     </span>
                     <span className="db-act">
                       <button onClick={() => onView(f.slug)}>Voir</button>
-                      <button className="pri" onClick={() => onEdit(f.slug)}>
+                      <button className="pri" onClick={() => onEdit(f.id)}>
                         Modifier
                       </button>
                     </span>
