@@ -6,10 +6,11 @@ import { api } from "../../../lib/api";
 import Fiche from "../components/Fiche";
 import type { FicheRecord, Formule } from "../../../types";
 
-type ApiFicheDetail = {
+export type ApiFicheDetail = {
   id: number;
   slug: string;
   formule: string;
+  planCapabilities?: FicheRecord["planCapabilities"];
   statut: string;
   expiree?: boolean;
   enLigneSeule: boolean;
@@ -37,11 +38,11 @@ type ApiFicheDetail = {
   };
 };
 
-function toFicheRecord(dto: ApiFicheDetail): FicheRecord {
+export function toFicheRecord(dto: ApiFicheDetail): FicheRecord {
   const data = dto.data ?? {};
   const galerie = (data.galerie ?? [])
-    .filter(media => media.type === "image")
-    .map(media => ({ type: "image" as const, url: media.url, alt: media.alt }));
+    .filter(media => media.type === "image" || media.type === "video")
+    .map(media => ({ type: media.type as "image" | "video", url: media.url, alt: media.alt }));
 
   // L'API renvoie les photos d'un bien sous forme d'URLs ; le composant de fiche
   // utilise des objets BienPhoto. On adapte la forme sans modifier le DTO serveur.
@@ -61,6 +62,8 @@ function toFicheRecord(dto: ApiFicheDetail): FicheRecord {
     id: dto.id,
     slug: dto.slug,
     formule: dto.formule.toLowerCase() as Formule,
+    planCapabilities: dto.planCapabilities ?? null,
+    expiree: dto.expiree ?? false,
     statut: dto.statut.toLowerCase(),
     enLigneSeule: dto.enLigneSeule,
     prenom: dto.prenom ?? "",
