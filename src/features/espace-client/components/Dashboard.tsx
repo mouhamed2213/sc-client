@@ -1,9 +1,10 @@
-import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import CreateFicheForm from "../pages/CreateFicheForm";
-import { dashboardFichesKey } from "../hooks/useDashboardFiches";
+import { useState } from "react";
 import "../../espace-client/styles/dashboard.css";
-import { useDashboardFiches } from "../hooks/useDashboardFiches";
+import {
+  dashboardFichesKey,
+  useDashboardFiches,
+} from "../hooks/useDashboardFiches";
 import { ApiError } from "../lib/api";
 import type { Health } from "../lib/dashboard";
 import {
@@ -16,6 +17,7 @@ import {
   publicUrl,
   SECTEUR_LABEL,
 } from "../lib/dashboard";
+import CreateFicheForm from "../pages/CreateFicheForm";
 
 /*
   Tableau de bord de l'espace client. Données : GET client/dashboard/fiches (TanStack Query, hook useDashboardFiches).
@@ -89,7 +91,7 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
         <header className="db-create-modal-head">
           <div>
             <p className="db-k">Nouvelle fiche</p>
-            <h2 id="db-create-title">Créer une fiche connectée</h2>
+            <h2 id="db-create-title">Créer une fiche</h2>
           </div>
           <button
             type="button"
@@ -149,7 +151,10 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
       <div className="db">
         <div className="db-state">
           <h2>Aucune fiche pour le moment</h2>
-          <p>Créez votre première fiche connectée pour commencer à la personnaliser.</p>
+          <p>
+            Créez votre première fiche connectée pour commencer à la
+            personnaliser.
+          </p>
           <button className="db-create-btn" onClick={() => setCreateOpen(true)}>
             + Créer ma fiche
           </button>

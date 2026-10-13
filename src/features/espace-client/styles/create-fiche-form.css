@@ -194,46 +194,111 @@
   word-break: break-all;
 }
 
-
 /* Formulaire intégré dans une fenêtre : garder une grille lisible sur petit écran. */
-.cf-grid.cf-two{grid-template-columns:repeat(2,minmax(0,1fr))}
-.cf-field{min-width:0}
-.cf-input{min-width:0}
-.cf-link:hover{text-decoration:underline}
-@media(max-width:479px){
-  .cf-grid.cf-two{grid-template-columns:minmax(0,1fr)}
+.cf-grid.cf-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-
+.cf-field {
+  min-width: 0;
+}
+.cf-input {
+  min-width: 0;
+}
+.cf-link:hover {
+  text-decoration: underline;
+}
+@media (max-width: 479px) {
+  .cf-grid.cf-two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 
 /* Grille compacte et uniforme pour le formulaire de creation */
-.cf-form-grid{
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  column-gap:16px;
-  row-gap:12px;
-  align-items:start;
+.cf-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 16px;
+  row-gap: 12px;
+  align-items: start;
 }
-.cf-form-grid>.cf-field{min-width:0;width:100%}
-.cf-form-grid>.cf-field-full{grid-column:1/-1}
-.cf-form-grid .cf-input{width:100%;min-width:0;height:42px}
-.cf-box{padding:16px 18px 14px}
-.cf-box h2{font-size:20px;margin-bottom:3px}
-.cf-sub{font-size:13px;line-height:1.4;margin-bottom:14px}
-.cf-field label{font-size:12.5px;margin-bottom:5px;line-height:1.35}
-.cf-field label.cf-check{margin-top:7px;font-size:12.5px}
-.cf-btn{height:44px;margin-top:14px}
-.cf-note{font-size:12px;line-height:1.4;margin-top:9px}
-.cf-alert{margin-bottom:10px;padding:8px 10px}
-@media(max-width:640px){
-  .cf-form-grid{grid-template-columns:minmax(0,1fr);row-gap:11px}
-  .cf-form-grid>.cf-field-full{grid-column:auto}
-  .cf-box{padding:14px 14px 12px}
-  .cf-plan{padding:11px 14px}
-  .cf-plan b{font-size:18px}
-  .cf-sub{margin-bottom:12px}
+.cf-form-grid > .cf-field {
+  min-width: 0;
+  width: 100%;
 }
-@media(max-width:360px){
-  .cf-plan{gap:8px}
-  .cf-plan b{font-size:17px}
-  .cf-plan span{font-size:11px;padding:4px 8px}
-  .cf-input{font-size:16px}
+.cf-form-grid > .cf-field-full {
+  grid-column: 1/-1;
+}
+.cf-form-grid .cf-input {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+}
+.cf-box {
+  padding: 16px 18px 14px;
+}
+.cf-box h2 {
+  font-size: 20px;
+  margin-bottom: 3px;
+}
+.cf-sub {
+  font-size: 13px;
+  line-height: 1.4;
+  margin-bottom: 14px;
+}
+.cf-field label {
+  font-size: 12.5px;
+  margin-bottom: 5px;
+  line-height: 1.35;
+}
+.cf-field label.cf-check {
+  margin-top: 7px;
+  font-size: 12.5px;
+}
+.cf-btn {
+  height: 44px;
+  margin-top: 14px;
+}
+.cf-note {
+  font-size: 12px;
+  line-height: 1.4;
+  margin-top: 9px;
+}
+.cf-alert {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+}
+@media (max-width: 640px) {
+  .cf-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 11px;
+  }
+  .cf-form-grid > .cf-field-full {
+    grid-column: auto;
+  }
+  .cf-box {
+    padding: 14px 14px 12px;
+  }
+  .cf-plan {
+    padding: 11px 14px;
+  }
+  .cf-plan b {
+    font-size: 18px;
+  }
+  .cf-sub {
+    margin-bottom: 12px;
+  }
+}
+@media (max-width: 360px) {
+  .cf-plan {
+    gap: 8px;
+  }
+  .cf-plan b {
+    font-size: 17px;
+  }
+  .cf-plan span {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+  .cf-input {
+    font-size: 16px;
+  }
 }
