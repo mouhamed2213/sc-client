@@ -53,26 +53,21 @@ export const THEMES = ["or", "clair", "bleu", "nuit"] as const;
 export type Theme = (typeof THEMES)[number];
 
 export const TAB_TYPES = [
-  "PRESENTATION",
-  "MENU",
-  "BIENS",
-  "CATALOGUE",
-  "GALERIE",
-  "VIDEOS",
-  "LIENS",
-  "RENDEZVOUS",
-  "RAPPEL",
-  "HORAIRES",
-  "AVIS",
-  "RESEAUX",
-  "LOCALISATION",
-  "TEXTE",
+  "presentation",
+  "catalogue",
+  "galerie",
+  "videos",
+  "liens",
+  "horaires",
+  "avis",
+  "reseaux",
+  "localisation",
 ] as const;
 
 export const MEDIA_TYPES = ["IMAGE", "VIDEO"] as const;
 export type MediaType = (typeof MEDIA_TYPES)[number];
 
-export const BIEN_TYPES = ["VENTE", "LOCATION"] as const;
+export const BIEN_TYPES = ["vente", "location"] as const;
 export type BienType = (typeof BIEN_TYPES)[number];
 
 /* ───────────────────────── Contenu de la fiche ───────────────────────── */
