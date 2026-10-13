@@ -8,14 +8,10 @@ export async function createFiche(data: any) {
     const result = await api.post("/fiches", data);
     return result.data;
   } catch (e) {
-    if (axios.isAxiosError(e)) {
-      console.log(
-        e.response?.data?.error?.message ?? "Une erreur est survenue."
-      );
-
-      throw e.response?.data?.error?.message ?? "Une erreur est survenue.";
-    }
-    return;
+    // Conserver le statut et le corps Axios : le formulaire affiche le message
+    // utile et peut rediriger vers la connexion sur une session expirée.
+    if (axios.isAxiosError(e)) throw e;
+    throw e;
   }
 }
 
