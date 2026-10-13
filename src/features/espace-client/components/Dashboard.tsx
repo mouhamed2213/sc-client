@@ -337,6 +337,7 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
           </div>
         </aside>
       </div>
+      {createDialog}
     </div>
   );
 }
