@@ -49,6 +49,12 @@ const NAV: {
       p === BASE || p === `${BASE}/` || p.startsWith(`${BASE}/fiches`),
   },
   {
+    to: `${BASE}/editeur`,
+    label: "Éditeur de fiches",
+    icon: "edit",
+    match: p => p.startsWith(`${BASE}/editeur`),
+  },
+  {
     to: `${BASE}/parametres`,
     label: "Paramètres",
     icon: "sliders",
