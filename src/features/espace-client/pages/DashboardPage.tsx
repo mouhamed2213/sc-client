@@ -1,30 +1,28 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FICHES } from "../../../data/fiches";
 import Dashboard from "../components/Dashboard";
+import { useDashboardFiches } from "../hooks/useDashboardFiches";
 import { useClientUser } from "../layout/useClientUser";
 
 export default function DashboardPage() {
   const user = useClientUser();
   const navigate = useNavigate();
-
-
-  
-
+  const { data: fiches = [] } = useDashboardFiches();
 
   useEffect(() => {
     document.title = "Tableau de bord — Support Connecté";
   }, []);
+
   return (
     <Dashboard
       user={user}
-      onView={s =>
-        window.open(`https://supportconnecte.com/f/${s}`, "_blank", "noopener")
-      }
-      // Démo : l'éditeur ne connaît que les fiches d'exemple. TODO : charger la fiche via l'API (GET client/fiches/:slug).
-      onEdit={s => {
-        if (FICHES.some(x => x.slug === s))
-          navigate(`/espace-client/fiches/${s}`);
+      onView={slug => {
+        const fiche = fiches.find(item => item.slug === slug);
+        if (fiche) navigate(`/espace-client/fiche/preview/${fiche.id}`);
+      }}
+      // L'éditeur reste séparé de la prévisualisation et utilise encore les fiches de démonstration.
+      onEdit={slug => {
+        navigate(`/espace-client/fiches/${slug}`);
       }}
     />
   );
