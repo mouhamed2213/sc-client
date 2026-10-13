@@ -29,6 +29,7 @@ import LegalPage, { LEGAL_PATHS } from "./pages/LegalPage";
 import PanneauxPage from "./pages/PanneauxPage";
 import QrSmartPage from "./pages/QrSmartPage";
 import SecteursPage from "./pages/SecteursPage";
+import { FichePage } from "./features/espace-client/pages/FichePage";
 
 // Pages chargées à la demande
 const ContenuPage = lazy(() => import("./pages/ContenuPage"));
@@ -129,6 +130,9 @@ export default function App() {
           {/* Pages espace client */}
           <Route path="/espace-client" element={<ClientLayout />}>
             <Route index element={<DashboardPage />} />
+            <Route path="fiche/preview/:slug" element={<FichePage />} />
+            {/* <Route path="/fiches/preview/:id" element={<SettingsPage />} /> */}
+
             {/* <Route path="fiches/:slug" element={<EditorPage />} /> */}
             <Route path="parametres" element={<SettingsPage />} />
           </Route>
