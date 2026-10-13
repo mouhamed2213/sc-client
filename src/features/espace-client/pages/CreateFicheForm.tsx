@@ -23,9 +23,7 @@ export interface CreatedFiche {
 }
 
 export interface CreateFicheFormProps {
-  /** Base de l'API. Défaut : VITE_API_URL, sinon http://localhost:4000/api */
-  apiUrl?: string;
-  /** Retourne le JWT du client connecté. Défaut : localStorage.getItem('token') */
+  /** Retourne le jeton du client connecté. */
   getToken?: () => string | null | undefined;
   /** Appelée avec la fiche créée (ex. rediriger vers l'éditeur). Sans elle, le formulaire affiche l'adresse publique. */
   onCreated?: (fiche: CreatedFiche) => void;
@@ -48,10 +46,6 @@ type Values = Record<FieldKey, string>;
 type Errors = Partial<Record<FieldKey, string>>;
 
 // ───────── Constantes ─────────
-
-const viteEnv = (import.meta as unknown as { env?: { VITE_API_URL?: string } })
-  .env;
-const API_URL = viteEnv?.VITE_API_URL || "http://localhost:4000/api";
 
 const SECTEURS = [
   { value: "restaurant", label: "Restaurant" },
@@ -121,7 +115,6 @@ function validate(v: Values, sameWhatsapp: boolean): Errors {
 // ───────── Composant ─────────
 
 export default function CreateFicheForm({
-  apiUrl = API_URL,
   getToken = readToken,
   onCreated,
   onUnauthorized,
