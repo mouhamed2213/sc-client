@@ -185,16 +185,28 @@ export default function CreateFicheForm({
     mutate(body);
   }
 
-  const { mutate, isSuccess, isError, error } = useMutation({
+  const { mutate } = useMutation({
     mutationFn: createFiche,
-    onSuccess: () => {
-
-      // hide modal 
+    onSuccess: response => {
       setLoading(false);
+      const fiche = (response?.fiche ?? response?.data ?? response) as CreatedFiche;
+      if (fiche?.slug) {
+        setCreated(fiche);
+        onCreated?.(fiche);
+      } else {
+        setFormError("La fiche a été créée, mais sa réponse est incomplète. Actualise le tableau de bord pour la retrouver.");
+      }
     },
-
-    onError: e => {
-      setFormError(e);
+    onError: error => {
+      setLoading(false);
+      const message =
+        typeof error === "string"
+          ? error
+          : error instanceof Error
+            ? error.message
+            : "La création de la fiche a échoué. Réessaie.";
+      setFormError(message);
+      if (/401|non autoris|session|connect/i.test(message)) onUnauthorized?.();
     },
   });
 
