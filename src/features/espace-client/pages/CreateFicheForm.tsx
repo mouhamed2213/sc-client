@@ -199,19 +199,23 @@ export default function CreateFicheForm({
     },
     onError: error => {
       setLoading(false);
+      const details =
+        typeof error === "object" && error !== null
+          ? (error as { response?: { status?: number; data?: { error?: { message?: string }; message?: string } } }).response
+          : undefined;
       const message =
         typeof error === "string"
           ? error
-          : error instanceof Error
-            ? error.message
-            : "La création de la fiche a échoué. Réessaie.";
+          : details?.data?.error?.message ??
+            details?.data?.message ??
+            (error instanceof Error ? error.message : "La création de la fiche a échoué. Réessaie.");
       setFormError(message);
-      if (/401|non autoris|session|connect/i.test(message)) onUnauthorized?.();
+      if (details?.status === 401 || /401|non autoris|session|connect/i.test(message)) onUnauthorized?.();
     },
   });
 
   if (created) {
-    const url = `${publicBaseUrl}/f/${created.slug}`;
+    const url = `${publicBaseUrl}/fiche/${created.slug}`;
     return (
       <div className="cf">
         <PlanBar />
