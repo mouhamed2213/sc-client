@@ -47,12 +47,6 @@ type TextKey = Exclude<FieldKey, "secteur">;
 type Values = Record<FieldKey, string>;
 type Errors = Partial<Record<FieldKey, string>>;
 
-interface ApiError {
-  code?: string;
-  message?: string;
-  details?: { champ: string; message: string }[];
-}
-
 // ───────── Constantes ─────────
 
 const viteEnv = (import.meta as unknown as { env?: { VITE_API_URL?: string } })
@@ -98,8 +92,6 @@ const EMPTY: Values = {
   secteur: "",
 };
 
-const isFieldKey = (k: string): k is FieldKey => k in EMPTY;
-
 const readToken = (): string | null => {
   try {
     return localStorage.getItem("client_token");
@@ -142,7 +134,7 @@ export default function CreateFicheForm({
   const [values, setValues] = useState<Values>(EMPTY);
   const [sameWhatsapp, setSameWhatsapp] = useState(true);
   const [errors, setErrors] = useState<Errors>({});
-  const [formError, setFormError] = useState<any>("");
+  const [formError, setFormError] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState<CreatedFiche | null>(null);
 
@@ -168,7 +160,7 @@ export default function CreateFicheForm({
     setErrors(errs);
     if (Object.values(errs).some(Boolean)) return focusFirst(errs);
 
-    const token = localStorage.getItem("client_token");
+    const token = getToken();
     if (!token) {
       setFormError("Connecte-toi pour créer une fiche.");
       onUnauthorized?.();
