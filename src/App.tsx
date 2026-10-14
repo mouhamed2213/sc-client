@@ -31,6 +31,7 @@ import QrSmartPage from "./pages/QrSmartPage";
 import SecteursPage from "./pages/SecteursPage";
 import { FichePage } from "./features/espace-client/pages/FichePage";
 import EditorPage from "./features/espace-client/pages/EditorPage";
+import SubscriptionPage from "./features/espace-client/pages/SubscriptionPage";
 
 // Pages chargées à la demande
 const ContenuPage = lazy(() => import("./pages/ContenuPage"));
@@ -134,6 +135,7 @@ export default function App() {
             <Route path="fiche/preview/:id" element={<FichePage />} />
             <Route path="editeur" element={<EditorPage />} />
             <Route path="editeur/:id" element={<EditorPage />} />
+            <Route path="abonnements" element={<SubscriptionPage />} />
             <Route path="parametres" element={<SettingsPage />} />
           </Route>
 
