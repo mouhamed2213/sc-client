@@ -40,7 +40,11 @@ export interface ApiFiche {
   enteteCouverture: string | null;
   createdAt: string;
   updatedAt: string;
-  /** Pas encore renvoyé par le serveur : à ajouter (voir README) pour afficher formule et échéance. */
+  /** Format actuellement renvoyé par le serveur dans la relation subscriptions. */
+  subscriptions?: {
+    plan: { type: "ESSENTIELLE" | "PRO" | "SIGNATURE"; nom?: string };
+  }[];
+  /** Ancien format compatible avec les réponses déjà adaptées. */
   abonnementActif?: {
     endsAt: string | null;
     plan: { type: "ESSENTIELLE" | "PRO" | "SIGNATURE"; nom: string };
