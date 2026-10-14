@@ -329,7 +329,7 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
               ))}
             </ul>
             {pc < 100 && (
-              <button className="db-copy pri" onClick={() => onEdit(cur.slug)}>
+              <button className="db-copy pri" onClick={() => onEdit(cur.id)}>
                 Compléter ma fiche
               </button>
             )}
