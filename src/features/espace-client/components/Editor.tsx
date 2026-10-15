@@ -35,6 +35,8 @@ import type {
   Theme,
 } from "../../../types";
 import { I, QR } from "./Fiche";
+import { optimizeImageFile } from "../services/mediaOptimizer";
+import { uploadFicheMedia } from "../services/media.service";
 import "./Editor.css";
 
 /*
@@ -231,11 +233,24 @@ export default function Editor({
     const id = setTimeout(() => setUndo(null), 7000);
     return () => clearTimeout(id);
   }, [undo]);
+  const uploadMedia = async (f: File) => {
+    const prepared = f.type.startsWith("image/") ? await optimizeImageFile(f) : f;
+    return uploadFicheMedia(fiche.id, prepared);
+  };
   const file =
-    (cb: (url: string) => void) => (ev: ChangeEvent<HTMLInputElement>) => {
-      const f = ev.target.files![0];
-      if (f && /^image\//.test(f.type)) cb(toURL(f));
-      ev.target.value = "";
+    (cb: (url: string) => void) => async (ev: ChangeEvent<HTMLInputElement>) => {
+      const input = ev.currentTarget;
+      const f = input.files?.[0];
+      try {
+        if (f && /^image\//.test(f.type)) {
+          const media = await uploadMedia(f);
+          cb(media.url);
+        }
+      } catch (error) {
+        window.alert(error instanceof Error ? error.message : "Échec de l'envoi du média.");
+      } finally {
+        input.value = "";
+      }
     };
 
   return (
@@ -824,7 +839,39 @@ function ContentEditor({
             </button>
           )}
           <small className="ed-cnt">{V.length}/{plan.maxVideos} vidéos</small>
-          <p className="ed-hint">Utilisez une URL publique https://. L’import direct d’un fichier vidéo n’est pas encore disponible.</p>
+          <label className="ed-add-b">
+              <input
+                type="file"
+                accept="video/mp4,video/webm"
+                style={{ display: "none" }}
+                disabled={V.length >= plan.maxVideos}
+                onChange={async ev => {
+                  const input = ev.currentTarget;
+                  const selected = input.files?.[0];
+                  try {
+                    if (!selected || !/^video\/(mp4|webm)$/.test(selected.type)) return;
+                    const current = latest.current.data.galerie || [];
+                    const videos = current.filter(media => media.type === "video");
+                    if (videos.length >= plan.maxVideos) return;
+                    const uploaded = await uploadMedia(selected);
+                    const latestGallery = latest.current.data.galerie || [];
+                    upD({
+                      galerie: [
+                        ...latestGallery.filter(media => media.type !== "video"),
+                        ...videos,
+                        { type: "video", url: uploaded.url, alt: "" },
+                      ],
+                    });
+                  } catch (error) {
+                    window.alert(error instanceof Error ? error.message : "Échec de l'envoi de la vidéo.");
+                  } finally {
+                    input.value = "";
+                  }
+                }}
+              />
+              + Importer une vidéo
+            </label>
+            <p className="ed-hint">Formats acceptés : MP4 et WebM, 30 Mo maximum par vidéo.</p>
         </div>
       );
     }
@@ -954,15 +1001,30 @@ function ContentEditor({
                 type="file"
                 accept="image/*"
                 multiple
-                onChange={ev => {
-                  const add = [...ev.target.files!]
-                    .filter(f => /^image\//.test(f.type))
-                    .slice(0, plan.maxPhotos - G.length)
-                    .map(
-                      (f): Photo => ({ type: "image", url: toURL(f), alt: "" })
-                    );
-                  upD({ galerie: [...G, ...add] });
-                  ev.target.value = "";
+                onChange={async ev => {
+                  const input = ev.currentTarget;
+                  const files = [...(input.files || [])]
+                    .filter(f => /^image\/(jpeg|png|webp)$/.test(f.type))
+                    .slice(0, Math.max(0, plan.maxPhotos - G.length));
+                  const add: Photo[] = [];
+                  try {
+                    for (const f of files) {
+                      const uploaded = await uploadMedia(f);
+                      add.push({ type: "image", url: uploaded.url, alt: "" });
+                    }
+                    if (add.length) {
+                      const current = latest.current.data.galerie || [];
+                      upD({ galerie: [...current, ...add] });
+                    }
+                  } catch (error) {
+                    window.alert(error instanceof Error ? error.message : "Échec de l'envoi d'une image.");
+                    if (add.length) {
+                      const current = latest.current.data.galerie || [];
+                      upD({ galerie: [...current, ...add] });
+                    }
+                  } finally {
+                    input.value = "";
+                  }
                 }}
               />
               <I n="plus" s={18} />
@@ -998,21 +1060,30 @@ function ContentEditor({
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={ev => {
-                        const f = ev.target.files![0];
-                        if (f)
+                      onChange={async ev => {
+                        const input = ev.currentTarget;
+                        const f = input.files?.[0];
+                        try {
+                          if (!f) return;
+                          const uploaded = await uploadMedia(f);
+                          const currentSections = latest.current.data.sections || [];
                           setS(
-                            S.map((x, j) =>
+                            currentSections.map((x, j) =>
                               j === si
                                 ? {
                                     ...x,
                                     articles: x.articles.map((y, k) =>
-                                      k === ai ? { ...y, photo: toURL(f) } : y
+                                      k === ai ? { ...y, photo: uploaded.url } : y
                                     ),
                                   }
                                 : x
                             )
                           );
+                        } catch (error) {
+                          window.alert(error instanceof Error ? error.message : "Échec de l'envoi de l'image.");
+                        } finally {
+                          input.value = "";
+                        }
                       }}
                     />
                     {a.photo ? (
@@ -1139,20 +1210,26 @@ function ContentEditor({
           const f = ev.target.files![0];
           ev.target.value = "";
           if (!f || !/^video\//.test(f.type)) return;
-          const u = toURL(f);
+          const localUrl = toURL(f);
           const v = document.createElement("video");
           v.preload = "metadata";
-          v.onloadedmetadata = () => {
-            if (v.duration > plan.maxMenuVideoSeconds! + 0.5)
-              setErr(
-                `Vidéo trop longue : ${plan.maxMenuVideoSeconds} secondes maximum.`
-              );
-            else {
+          v.onloadedmetadata = async () => {
+            if (v.duration > plan.maxMenuVideoSeconds! + 0.5) {
+              setErr(`Vidéo trop longue : ${plan.maxMenuVideoSeconds} secondes maximum.`);
+              URL.revokeObjectURL(localUrl);
+              return;
+            }
+            try {
               setErr("");
-              setP(si, pi, { video: u });
+              const uploaded = await uploadMedia(f);
+              setP(si, pi, { video: uploaded.url });
+            } catch (error) {
+              setErr(error instanceof Error ? error.message : "Échec de l'envoi de la vidéo.");
+            } finally {
+              URL.revokeObjectURL(localUrl);
             }
           };
-          v.src = u;
+          v.src = localUrl;
         };
       return (
         <div className="ed-items">
@@ -1175,9 +1252,18 @@ function ContentEditor({
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={ev => {
-                        const f = ev.target.files![0];
-                        if (f) setP(si, pi, { image: toURL(f) });
+                      onChange={async ev => {
+                        const input = ev.currentTarget;
+                        const f = input.files?.[0];
+                        try {
+                          if (!f) return;
+                          const uploaded = await uploadMedia(f);
+                          setP(si, pi, { image: uploaded.url });
+                        } catch (error) {
+                          window.alert(error instanceof Error ? error.message : "Échec de l'envoi de l'image.");
+                        } finally {
+                          input.value = "";
+                        }
                       }}
                     />
                     {p.image ? (
