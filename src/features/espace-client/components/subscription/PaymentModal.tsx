@@ -168,12 +168,14 @@ export function PaymentModal({
               setNotice("");
               upgradeMutation.mutate();
             }}
-            disabled={availablePlans.length === 0 || upgradeMutation.isPending}
+            disabled={availablePlans.length === 0 || upgradeMutation.isPending || upgradeMutation.isSuccess}
             className="w-full rounded-xl bg-[#08090A] px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-slate-950/10 transition hover:bg-[#c9142b] focus:outline-none focus:ring-2 focus:ring-[#EF1733] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {upgradeMutation.isPending
               ? "Activation en cours…"
-              : "Confirmer l’upgrade simulé"}
+              : upgradeMutation.isSuccess
+                ? "Formule activée"
+                : "Confirmer l’upgrade simulé"}
           </button>
           <p className="text-center text-xs leading-5 text-[#8d8a85]">
             La formule sélectionnée sera appliquée à cette fiche après confirmation du serveur.
