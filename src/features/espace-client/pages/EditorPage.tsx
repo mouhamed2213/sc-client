@@ -138,24 +138,22 @@ function FicheEditor({ id }: { id: string }) {
                   ? "Modifications non enregistrées"
                   : "Tout est enregistré"}
             </span>
-            {dirty && (
-              <>
-                <button
-                  className="edp-ghost"
-                  onClick={reset}
-                  disabled={saving || !!locked}
-                >
-                  Annuler
-                </button>
-                <button
-                  className="edp-save"
-                  onClick={save}
-                  disabled={saving || !!locked}
-                >
-                  Enregistrer
-                </button>
-              </>
-            )}
+
+            <button
+              className="edp-ghost"
+              onClick={reset}
+              disabled={!dirty || saving || !!locked}
+            >
+              Annuler
+            </button>
+            <button
+              className="edp-save"
+              onClick={save}
+              disabled={!dirty || saving || !!locked}
+            >
+              {saving ? "Enregistrement…" : "Enregistrer"}
+            </button>
+
           </div>
 
           {demoUnknown && (
