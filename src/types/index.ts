@@ -555,3 +555,39 @@ export interface Template {
   titles: Partial<Record<TabType, string>>;
   entete: { disposition: Disposition; taille: Taille };
 }
+
+
+export type PaymentMethod = "WAVE" | "ORANGE_MONEY";
+export const FORMULES: {
+  id: PlanType;
+  label: string;
+  price: number;
+  period: string;
+  description: string;
+  accent: string;
+}[] = [
+  {
+    id: "ESSENTIELLE",
+    label: "Essentiel",
+    price: 0,
+    period: "pour toujours",
+    description: "L'essentiel pour commencer à partager vos coordonnées.",
+    accent: "border-[#e3dfd8]",
+  },
+  {
+    id: "PRO",
+    label: "Pro",
+    price: 5000,
+    period: "par mois",
+    description: "Pour donner plus de visibilité à votre activité.",
+    accent: "border-[#ef1733]/30",
+  },
+  {
+    id: "SIGNATURE",
+    label: "Signature",
+    price: 10000,
+    period: "par mois",
+    description: "Une expérience complète pour votre présence digitale.",
+    accent: "border-amber-300",
+  },
+];
