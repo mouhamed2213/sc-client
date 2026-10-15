@@ -982,14 +982,17 @@ function ContentEditor({
       );
     }
     case "galerie": {
-      const G = d.galerie || [];
+      const allMedia = d.galerie || [];
+      const G = allMedia.filter(media => media.type !== "video");
       return (
         <div className="ed-gal">
           {G.map((g, k) => (
-            <span key={k}>
-              <img src={g.url} alt="" />
+            <span key={g.url || k}>
+              <img src={g.url} alt={g.alt || ""} />
               <button
-                onClick={() => upD({ galerie: G.filter((_, j) => j !== k) })}
+                onClick={() =>
+                  upD({ galerie: allMedia.filter(media => media.url !== g.url) })
+                }
               >
                 ×
               </button>
