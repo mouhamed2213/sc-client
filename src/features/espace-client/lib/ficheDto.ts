@@ -25,10 +25,6 @@ export type ApiFicheDetail = {
   data: {
     [key: string]: unknown;
     galerie?: { type: string; url: string; alt?: string }[];
-    biens?: {
-      [key: string]: unknown;
-      photos?: string[];
-    }[];
   };
 };
 
@@ -37,20 +33,6 @@ export function toFicheRecord(dto: ApiFicheDetail): FicheRecord {
   const galerie = (data.galerie ?? [])
     .filter(media => media.type === "image" || media.type === "video")
     .map(media => ({ type: media.type as "image" | "video", url: media.url, alt: media.alt }));
-
-  // L'API renvoie les photos d'un bien sous forme d'URLs ; le composant de fiche
-  // utilise des objets BienPhoto. On adapte la forme sans modifier le DTO serveur.
-  const biens = (data.biens ?? []).map((bien, index) => ({
-    ...bien,
-    id: typeof bien.id === "number" ? bien.id : index,
-    ficheId: dto.id,
-    photos: (bien.photos ?? []).map((url, position) => ({
-      id: position,
-      bienId: typeof bien.id === "number" ? bien.id : index,
-      url,
-      position,
-    })),
-  }));
 
   return {
     id: dto.id,
@@ -85,7 +67,7 @@ export function toFicheRecord(dto: ApiFicheDetail): FicheRecord {
       galerie,
       sections: data.sections as FicheRecord["data"]["sections"],
       menu: data.menu as FicheRecord["data"]["menu"],
-      biens: biens as unknown as FicheRecord["data"]["biens"],
+      biens: data.biens as FicheRecord["data"]["biens"],
       rendezVous: data.rendezVous as FicheRecord["data"]["rendezVous"],
       onglets: data.onglets as FicheRecord["data"]["onglets"],
       entete: data.entete as FicheRecord["data"]["entete"],

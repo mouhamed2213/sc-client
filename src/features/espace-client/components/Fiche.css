@@ -2,7 +2,7 @@
    Spécificité volontairement basse et placé en premier : les règles de la fiche (ci-dessous) gagnent toujours. */
 .fiche { font: 14px/1.5 Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; text-align: start; }
 .fiche *, .fiche *::before, .fiche *::after { box-sizing: border-box; }
-.fiche :where(button, input, select, textarea) { font: inherit; color: inherit; padding: revert; border: revert; background: revert; }
+.fiche :where(button, input, select, textarea) { font: inherit; color: inherit; padding: revert; border: revert; background: revert; appearance: revert; }
 .fiche :where(a) { color: inherit; text-decoration: none; }
 .fiche :where(img, svg, video, canvas) { display: inline; vertical-align: baseline; max-width: none; }
 .fiche :where(small) { font-size: smaller; }

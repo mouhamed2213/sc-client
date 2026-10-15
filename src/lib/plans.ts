@@ -250,6 +250,9 @@ export const THEMES: Record<Theme, string> = {
 let uid = 0;
 const nid = (t: string) =>
   `${t}-${Date.now().toString(36)}${(uid++).toString(36)}`;
+// Ids DÉTERMINISTES : defaultTabs() est rappelé à chaque rendu tant que la fiche n'a pas d'onglets
+// enregistrés ; avec des ids aléatoires, l'onglet ouvert / sélectionné ne correspondait plus à rien
+// au rendu suivant (sections qui se referment, bouton « Modifier » sans effet).
 export const defaultTabs = (formule: Formule): Onglet[] =>
   PLANS[formule].tabs
     .filter(
@@ -257,7 +260,7 @@ export const defaultTabs = (formule: Formule): Onglet[] =>
         t !== "texte" &&
         !(formule === "signature" && ["menu", "biens"].includes(t))
     )
-    .map(type => ({ id: nid(type), type, visible: true }));
+    .map(type => ({ id: `${formule}-${type}`, type, visible: true }));
 
 // Applique un modèle de métier sans jamais dépasser la formule
 export function applyTemplate(
