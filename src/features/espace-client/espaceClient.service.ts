@@ -46,7 +46,12 @@ export type UpgradePlanResponse = {
   data: {
     subscription: { id: number; ficheId: number; planId: number; status: string };
     fiche: { id: number; formule: string };
-    payment: { mode: "simulation"; status: "confirmed" };
+    payment: {
+      id: number;
+      reference: string | null;
+      mode: "simulation";
+      status: "confirmed";
+    };
   };
 };
 
