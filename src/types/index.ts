@@ -172,6 +172,26 @@ export interface BienPhoto {
   position: number;
 }
 
+/**
+ * Bien tel qu'il est édité et renvoyé dans `data.biens` (GET / PATCH /fiches/:id) :
+ * prix en texte, photos en URLs. C'est la forme de la référence ; `Bien` (ci-dessous)
+ * reste la ligne de base de données.
+ */
+export interface BienData {
+  titre: string;
+  type: "vente" | "location";
+  prix?: string;
+  periode?: string;
+  ville?: string;
+  surface?: number | string;
+  terrain?: number | string;
+  chambres?: number | string;
+  sdb?: number | string;
+  atouts?: string[];
+  description?: string;
+  photos?: string[];
+}
+
 export interface Bien {
   id: number;
   ficheId: number;
@@ -418,7 +438,7 @@ export interface Horaire {
   horaire: string;
 }
 export interface Photo {
-  type: "image";
+  type: "image" | "video";
   url: string;
   alt?: string;
 }
@@ -459,7 +479,7 @@ export interface FicheData {
   galerie?: Photo[];
   sections?: SectionCatalogue[];
   menu?: { sections: SectionMenu[] };
-  biens?: Bien[];
+  biens?: BienData[];
   rendezVous?: { label: string; url: string };
   onglets?: Onglet[];
   entete?: Entete;
@@ -468,6 +488,8 @@ export interface FicheRecord {
   id: number;
   slug: string;
   formule: Formule;
+  planCapabilities?: Plan | null;
+  expiree?: boolean;
   statut: string;
   enLigneSeule: boolean;
   prenom: string;

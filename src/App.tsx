@@ -30,10 +30,12 @@ import PanneauxPage from "./pages/PanneauxPage";
 import QrSmartPage from "./pages/QrSmartPage";
 import SecteursPage from "./pages/SecteursPage";
 import { FichePage } from "./features/espace-client/pages/FichePage";
+import SubscriptionPage from "./features/espace-client/pages/SubscriptionPage";
 
 // Pages chargées à la demande
 const ContenuPage = lazy(() => import("./pages/ContenuPage"));
 const ImmobilierPage = lazy(() => import("./pages/ImmobilierPage"));
+const EditorPage = lazy(() => import("./features/espace-client/pages/EditorPage"));
 
 const SECTOR_IDS: string[] = SECTORS.map(x => x.id);
 
@@ -131,6 +133,9 @@ export default function App() {
           <Route path="/espace-client" element={<ClientLayout />}>
             <Route index element={<DashboardPage />} />
             <Route path="fiche/preview/:id" element={<FichePage />} />
+            <Route path="editeur" element={<EditorPage />} />
+            <Route path="editeur/:id" element={<EditorPage />} />
+            <Route path="abonnements" element={<SubscriptionPage />} />
             <Route path="parametres" element={<SettingsPage />} />
           </Route>
 

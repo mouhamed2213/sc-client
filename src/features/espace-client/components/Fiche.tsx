@@ -3,8 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { cssVars } from "../../../lib/css";
 import { PLANS, TAB_TYPES, visibleTabs } from "../../../lib/plans";
 import type {
-  Bien,
-  BienPhoto,
+  BienData as Bien,
   EnteteComplete,
   FicheRecord,
   Onglet,
@@ -874,7 +873,7 @@ const prixBien = (b: Bien) =>
   b.prix
     ? `${new Intl.NumberFormat("fr-FR").format(Number(b.prix))} FCFA${b.type === "location" ? ` / ${b.periode || "mois"}` : ""}`
     : "Prix sur demande";
-function Photos({ photos, alt }: { photos: BienPhoto[]; alt: string }) {
+function Photos({ photos, alt }: { photos: string[]; alt: string }) {
   const [i, setI] = useState(0);
   return (
     <div className="f-ph">
@@ -889,7 +888,7 @@ function Photos({ photos, alt }: { photos: BienPhoto[]; alt: string }) {
         {photos.map((u, k) => (
           <img
             key={k}
-            src={u.url}
+            src={u}
             alt={k ? "" : alt}
             loading="lazy"
             draggable="false"

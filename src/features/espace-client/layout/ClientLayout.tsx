@@ -14,6 +14,8 @@ const BASE = "/espace-client";
 const P: Record<string, string> = {
   grid: "M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z",
   sliders: "M4 7h9M17 7h3M4 17h3M11 17h9M13 4v6M7 14v6",
+  creditCard: "M3 6h18v12H3zM3 10h18M7 15h3",
+  edit: "M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z",
   out: "M10 4H5v16h5M15 8l4 4-4 4M9 12h10",
   menu: "M4 6h16M4 12h16M4 18h16",
   x: "M6 6l12 12M18 6L6 18",
@@ -46,6 +48,18 @@ const NAV: {
     icon: "grid",
     match: p =>
       p === BASE || p === `${BASE}/` || p.startsWith(`${BASE}/fiches`),
+  },
+  {
+    to: `${BASE}/editeur`,
+    label: "Éditeur de fiches",
+    icon: "edit",
+    match: p => p.startsWith(`${BASE}/editeur`),
+  },
+  {
+    to: `${BASE}/abonnements`,
+    label: "Abonnements & formules",
+    icon: "creditCard",
+    match: p => p.startsWith(`${BASE}/abonnements`),
   },
   {
     to: `${BASE}/parametres`,
