@@ -414,9 +414,11 @@ function PaymentModal({
 }
 
 export type SubscriptionKpi = {
-  nbrFiche: number;
-  nbrFicheActive: number;
-  nbrPayingFiche: number;
+  data: {
+    nbrFiche: number;
+    nbrFicheActive: number;
+    nbrPayingFiche: number;
+  };
 };
 
 export default function SubscriptionPage() {
@@ -446,7 +448,6 @@ export default function SubscriptionPage() {
     queryKey: ["kpiSubscription"],
     queryFn: getKpi,
   });
-
   return (
     <div className="min-h-full bg-transparent px-4 py-6 text-[#111111] sm:px-6 lg:px-8 lg:py-8">
       <div className="mx-auto max-w-[1600px]">
@@ -488,19 +489,19 @@ export default function SubscriptionPage() {
             label="Toutes mes fiches"
             caption="Fiches enregistrées"
             icon="▤"
-            stat={kpi?.nbrFiche as number}
+            stat={kpi?.data.nbrFiche as number}
           />
           <StatCard
             label="Fiches actives"
             caption="Prêtes à être consultées"
             icon="↗"
-            stat={kpi?.nbrFicheActive as number}
+            stat={kpi?.data.nbrFicheActive as number}
           />
           <StatCard
             label="Abonnements payants"
             caption="Formules Pro et Signature"
             icon="✧"
-            stat={kpi?.nbrPayingFiche as number}
+            stat={kpi?.data.nbrPayingFiche as number}
           />
         </section>
         <div
