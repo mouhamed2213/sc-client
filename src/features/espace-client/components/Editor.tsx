@@ -1360,8 +1360,10 @@ function ContentEditor({
     }
     case "biens": {
       const Bs = d.biens || [];
-      const setB = (i: number, patch: Partial<Bien>) =>
-        upD({ biens: Bs.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
+      const setB = (i: number, patch: Partial<Bien>) => {
+        const current = latest.current.data.biens || [];
+        upD({ biens: current.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
+      };
       return (
         <div className="ed-items">
           {Bs.map((b, i) => (
@@ -1434,16 +1436,33 @@ function ContentEditor({
                       type="file"
                       accept="image/*"
                       multiple
-                      onChange={ev => {
-                        const add = [...ev.target.files!]
-                          .filter(f => /^image\//.test(f.type))
+                      onChange={async ev => {
+                        const input = ev.currentTarget;
+                        const files = [...(input.files || [])]
+                          .filter(f => /^image\\/(jpeg|png|webp)$/.test(f.type))
                           .slice(
                             0,
-                            plan.maxPhotosPerBien! - (b.photos || []).length
-                          )
-                          .map(toURL);
-                        setB(i, { photos: [...(b.photos || []), ...add] });
-                        ev.target.value = "";
+                            Math.max(0, plan.maxPhotosPerBien! - (b.photos || []).length)
+                          );
+                        const added: string[] = [];
+                        try {
+                          for (const f of files) {
+                            const uploaded = await uploadMedia(f);
+                            added.push(uploaded.url);
+                          }
+                          if (added.length) {
+                            const current = latest.current.data.biens?.[i];
+                            if (current) setB(i, { photos: [...(current.photos || []), ...added] });
+                          }
+                        } catch (error) {
+                          if (added.length) {
+                            const current = latest.current.data.biens?.[i];
+                            if (current) setB(i, { photos: [...(current.photos || []), ...added] });
+                          }
+                          window.alert(error instanceof Error ? error.message : "Échec de l'envoi d'une photo du bien.");
+                        } finally {
+                          input.value = "";
+                        }
                       }}
                     />
                     <I n="plus" s={18} />
