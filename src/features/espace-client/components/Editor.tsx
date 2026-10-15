@@ -1439,7 +1439,7 @@ function ContentEditor({
                       onChange={async ev => {
                         const input = ev.currentTarget;
                         const files = [...(input.files || [])]
-                          .filter(f => /^image\\/(jpeg|png|webp)$/.test(f.type))
+                          .filter(f => /^image\/(jpeg|png|webp)$/.test(f.type))
                           .slice(
                             0,
                             Math.max(0, plan.maxPhotosPerBien! - (b.photos || []).length)
