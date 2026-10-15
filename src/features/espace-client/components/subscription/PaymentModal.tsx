@@ -150,7 +150,7 @@ export function PaymentModal({
 
           {availablePlans.length > 0 && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-              <strong>Mode simulation :</strong> aucun paiement Wave ou Orange Money ne sera effectué. En confirmant, le serveur activera immédiatement la nouvelle formule pour cette fiche.
+              <strong>Mode simulation :</strong> aucun paiement Wave ou Orange Money ne sera effectué. Le serveur enregistrera une tentative de paiement, la confirmera en mode simulation, puis activera la nouvelle formule. Aucun paiement réel n’est effectué.
             </div>
           )}
 
