@@ -673,19 +673,26 @@ function ContentEditor({
           />
         </label>
       );
-    case "horaires":
+    case "horaires": {
+      // ADAPTATION (hors référence) : une fiche neuve de l'API n'a AUCUN horaire en base. On affiche donc
+      // toujours les 7 jours ; un jour laissé vide n'est pas enregistré. Avec des données déjà complètes
+      // (cas de la référence), le rendu et le comportement sont identiques.
+      const JOURS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+      const H = d.horaires || [];
+      const valeur = (j: string) => H.find(h => h.jour === j)?.horaire ?? "";
       return (
         <div className="ed-hours">
-          {(d.horaires || []).map((h, k) => (
-            <label key={h.jour}>
-              <span>{h.jour}</span>
+          {JOURS.map(jour => (
+            <label key={jour}>
+              <span>{jour}</span>
               <input
-                value={h.horaire}
+                value={valeur(jour)}
                 onChange={ev =>
                   upD({
-                    horaires: d.horaires!.map((x, j) =>
-                      j === k ? { ...x, horaire: ev.target.value } : x
-                    ),
+                    horaires: JOURS.map(x => ({
+                      jour: x,
+                      horaire: x === jour ? ev.target.value : valeur(x),
+                    })).filter(h => h.horaire !== ""),
                   })
                 }
               />
@@ -693,6 +700,7 @@ function ContentEditor({
           ))}
         </div>
       );
+    }
     case "liens": {
       const L = d.liens || [];
       return (

@@ -1,61 +1,100 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FicheRecord } from "../../../types";
-import { ficheSource } from "../lib/ficheSource";
+import { FicheError, ficheSource, toFicheError } from "../lib/ficheSource";
+import { dashboardFichesKey } from "./useDashboardFiches";
 
 type Status = "loading" | "ready" | "error";
 
 /**
  * Brouillon local d'une fiche en cours d'édition.
- * L'éditeur modifie `draft` à chaque frappe (aperçu téléphone en direct) ; rien n'est envoyé tant
- * que `save()` n'est pas appelé — indispensable avec l'API (limite de débit, validation serveur).
+ * L'éditeur modifie `draft` à chaque frappe (aperçu téléphone en direct) ; rien n'est envoyé au serveur
+ * tant que `save()` n'est pas appelé (limite de débit de l'API + validation serveur).
  */
 export function useFicheEditor(key: string) {
+  const queryClient = useQueryClient();
   const [draft, setDraft] = useState<FicheRecord | null>(null);
   const [status, setStatus] = useState<Status>("loading");
+  const [loadError, setLoadError] = useState<FicheError | null>(null);
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const saved = useRef<string>("");
+  const [saveError, setSaveError] = useState<FicheError | null>(null);
+  const [notes, setNotes] = useState<string[]>([]);
+  const [attempt, setAttempt] = useState(0);
+  const saved = useRef<FicheRecord | null>(null);
+  const savedJson = useRef("");
 
   useEffect(() => {
+    if (!key) return;
     let live = true;
     setStatus("loading");
     setDraft(null);
+    setLoadError(null);
     setSaveError(null);
+    setNotes([]);
     ficheSource
       .load(key)
       .then(f => {
         if (!live) return;
-        saved.current = JSON.stringify(f);
+        saved.current = f;
+        savedJson.current = JSON.stringify(f);
         setDraft(f);
         setStatus("ready");
       })
-      .catch(() => live && setStatus("error"));
+      .catch(e => {
+        if (!live) return;
+        setLoadError(toFicheError(e));
+        setStatus("error");
+      });
     return () => {
       live = false;
     };
-  }, [key]);
+  }, [key, attempt]);
 
-  const dirty = draft !== null && JSON.stringify(draft) !== saved.current;
+  const dirty = draft !== null && JSON.stringify(draft) !== savedJson.current;
 
   const save = useCallback(async () => {
-    if (!draft || saving) return;
+    if (!draft || !saved.current || saving) return;
     setSaving(true);
     setSaveError(null);
+    setNotes([]);
     try {
-      const f = await ficheSource.save(draft);
-      saved.current = JSON.stringify(f);
-      setDraft(f);
+      const { fiche, notes } = await ficheSource.save(draft, saved.current);
+      saved.current = fiche;
+      savedJson.current = JSON.stringify(fiche);
+      setDraft(fiche);
+      setNotes(notes);
+      // Le tableau de bord et l'aperçu doivent refléter la modification
+      void queryClient.invalidateQueries({ queryKey: dashboardFichesKey });
+      void queryClient.invalidateQueries({ queryKey: ["fiche-preview", fiche.id] });
     } catch (e) {
-      // À l'API : lire e.response.data.error.details ([{ champ, message }]) pour afficher l'erreur sous le champ.
-      setSaveError(e instanceof Error ? e.message : "Enregistrement impossible");
+      setSaveError(toFicheError(e));
     } finally {
       setSaving(false);
     }
-  }, [draft, saving]);
+  }, [draft, saving, queryClient]);
 
   const reset = useCallback(() => {
-    if (saved.current) setDraft(JSON.parse(saved.current) as FicheRecord);
+    if (saved.current) {
+      setDraft(JSON.parse(savedJson.current) as FicheRecord);
+      setSaveError(null);
+      setNotes([]);
+    }
   }, []);
 
-  return { draft, setDraft, status, dirty, saving, saveError, save, reset, isMock: ficheSource.isMock };
+  const retry = useCallback(() => setAttempt(n => n + 1), []);
+
+  return {
+    draft,
+    setDraft,
+    status,
+    loadError,
+    dirty,
+    saving,
+    saveError,
+    notes,
+    save,
+    reset,
+    retry,
+    isMock: ficheSource.isMock,
+  };
 }

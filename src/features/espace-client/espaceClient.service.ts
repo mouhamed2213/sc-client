@@ -3,7 +3,8 @@ import axios from "axios";
 import { api } from "../../lib/api";
 import type { ApiFiche } from "./api-types";
 import { ApiError } from "./lib/api";
-import { SubscriptionKpi } from "./pages/SubscriptionPage";
+import type { SubscriptionKpi } from "./pages/SubscriptionPage";
+import type { PlanType } from "../../types";
 
 export async function createFiche(data: any) {
   const result = await api.post("/fiches", data);
@@ -24,6 +25,8 @@ export async function getDashboardFiche(
 export async function getKpi(): Promise<SubscriptionKpi> {
   try {
     const response = await api.get<SubscriptionKpi>("subscription/kpi");
+    console.log(response.data);
+
     return response.data;
   } catch (e) {
     if (axios.isAxiosError(e)) {
@@ -34,4 +37,26 @@ export async function getKpi(): Promise<SubscriptionKpi> {
     }
     throw e;
   }
+}
+
+
+export type UpgradePlanResponse = {
+  succes: string;
+  message?: string;
+  data: {
+    subscription: { id: number; ficheId: number; planId: number; status: string };
+    fiche: { id: number; formule: string };
+    payment: { mode: "simulation"; status: "confirmed" };
+  };
+};
+
+export async function upgradeFichePlan(
+  ficheId: number,
+  plan: Exclude<PlanType, "ESSENTIELLE">
+): Promise<UpgradePlanResponse> {
+  const response = await api.post<UpgradePlanResponse>("/subscription/upgrade", {
+    ficheId,
+    plan: plan.toLowerCase(),
+  });
+  return response.data;
 }

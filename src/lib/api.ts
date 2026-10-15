@@ -19,3 +19,14 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   }
   return config;
 });
+
+// API RESPONSE TYPE
+
+export type apiResponse<T> = {
+  data: {
+    data: T;
+    status: number;
+    message?: string;
+    success?: string;
+  };
+};
