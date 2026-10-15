@@ -46,8 +46,8 @@ import "./Editor.css";
   - Signature : palette de blocs à faire glisser dans la page (ou à toucher pour ajouter), renommer, supprimer,
     menu interactif (photo + vidéo courte par plat), biens immobiliers (photos + caractéristiques), entête modulable.
   - Tout ce qui dépasse la formule est verrouillé et renvoie vers l'offre supérieure.
-  ⚠️ Démo : les fichiers importés restent dans le navigateur (URL locales). En production : envoi au stockage
-     + validation serveur des mêmes limites (lib/plans.ts).
+  Les images et vidéos sont envoyées au stockage via l'API avant d'être référencées dans la fiche.
+  Les URL locales ne sont utilisées que temporairement pour télécharger le QR ou lire les métadonnées vidéo.
 */
 const Lock = ({
   to = "Signature",
@@ -533,7 +533,7 @@ export default function Editor({
           <label className="ed-file">
             <input
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               onChange={file(u => up({ photo: u }))}
             />
             {fiche.photo ? <img src={fiche.photo} alt="" /> : <I n="user" />}
@@ -542,7 +542,7 @@ export default function Editor({
           <label className="ed-file">
             <input
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               onChange={file(u => up({ logo: u }))}
             />
             {fiche.logo ? <img src={fiche.logo} alt="" /> : <I n="image" />}
@@ -606,7 +606,7 @@ export default function Editor({
               <label className="ed-file wide">
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   onChange={file(u => setE({ couverture: u }))}
                 />
                 {e.couverture ? (
@@ -1002,7 +1002,7 @@ function ContentEditor({
             <label className="ed-gal-add">
               <input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 multiple
                 onChange={async ev => {
                   const input = ev.currentTarget;
@@ -1062,7 +1062,7 @@ function ContentEditor({
                   <label className="ed-thumb">
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/jpeg,image/png,image/webp"
                       onChange={async ev => {
                         const input = ev.currentTarget;
                         const f = input.files?.[0];
@@ -1212,7 +1212,10 @@ function ContentEditor({
         (si: number, pi: number) => (ev: ChangeEvent<HTMLInputElement>) => {
           const f = ev.target.files![0];
           ev.target.value = "";
-          if (!f || !/^video\//.test(f.type)) return;
+          if (!f || !/^video\/(mp4|webm)$/.test(f.type)) {
+            if (f) setErr("Format vidéo non pris en charge. Utilisez MP4 ou WebM.");
+            return;
+          }
           const localUrl = toURL(f);
           const v = document.createElement("video");
           v.preload = "metadata";
@@ -1254,7 +1257,7 @@ function ContentEditor({
                   <label className="ed-thumb">
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/jpeg,image/png,image/webp"
                       onChange={async ev => {
                         const input = ev.currentTarget;
                         const f = input.files?.[0];
@@ -1305,7 +1308,7 @@ function ContentEditor({
                     <label className="ed-vid">
                       <input
                         type="file"
-                        accept="video/*"
+                        accept="video/mp4,video/webm"
                         onChange={vid(si, pi)}
                       />
                       <I n="play" s={14} />
@@ -1434,7 +1437,7 @@ function ContentEditor({
                   <label className="ed-gal-add">
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/jpeg,image/png,image/webp"
                       multiple
                       onChange={async ev => {
                         const input = ev.currentTarget;
