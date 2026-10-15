@@ -64,6 +64,12 @@ const Lock = ({
 );
 const toURL = (f: Blob) => URL.createObjectURL(f);
 
+/** Upload helper shared by Editor and ContentEditor (separate component scope). */
+async function uploadMedia(ficheId: number, file: File) {
+  const prepared = file.type.startsWith("image/") ? await optimizeImageFile(file) : file;
+  return uploadFicheMedia(ficheId, prepared);
+}
+
 type DragPayload =
   | { kind: "move"; id: string; label: string }
   | { kind: "new"; type: TabType; label: string; id?: undefined };
@@ -233,17 +239,13 @@ export default function Editor({
     const id = setTimeout(() => setUndo(null), 7000);
     return () => clearTimeout(id);
   }, [undo]);
-  const uploadMedia = async (f: File) => {
-    const prepared = f.type.startsWith("image/") ? await optimizeImageFile(f) : f;
-    return uploadFicheMedia(fiche.id, prepared);
-  };
   const file =
     (cb: (url: string) => void) => async (ev: ChangeEvent<HTMLInputElement>) => {
       const input = ev.currentTarget;
       const f = input.files?.[0];
       try {
         if (f && /^image\//.test(f.type)) {
-          const media = await uploadMedia(f);
+          const media = await uploadMedia(fiche.id, f);
           cb(media.url);
         }
       } catch (error) {
@@ -853,7 +855,7 @@ function ContentEditor({
                     const current = latest.current.data.galerie || [];
                     const videos = current.filter(media => media.type === "video");
                     if (videos.length >= plan.maxVideos) return;
-                    const uploaded = await uploadMedia(selected);
+                    const uploaded = await uploadMedia(fiche.id, selected);
                     const latestGallery = latest.current.data.galerie || [];
                     upD({
                       galerie: [
@@ -1012,7 +1014,7 @@ function ContentEditor({
                   const add: Photo[] = [];
                   try {
                     for (const f of files) {
-                      const uploaded = await uploadMedia(f);
+                      const uploaded = await uploadMedia(fiche.id, f);
                       add.push({ type: "image", url: uploaded.url, alt: "" });
                     }
                     if (add.length) {
@@ -1068,7 +1070,7 @@ function ContentEditor({
                         const f = input.files?.[0];
                         try {
                           if (!f) return;
-                          const uploaded = await uploadMedia(f);
+                          const uploaded = await uploadMedia(fiche.id, f);
                           const currentSections = latest.current.data.sections || [];
                           setS(
                             currentSections.map((x, j) =>
@@ -1227,7 +1229,7 @@ function ContentEditor({
             }
             try {
               setErr("");
-              const uploaded = await uploadMedia(f);
+              const uploaded = await uploadMedia(fiche.id, f);
               setP(si, pi, { video: uploaded.url });
             } catch (error) {
               setErr(error instanceof Error ? error.message : "Échec de l'envoi de la vidéo.");
@@ -1263,7 +1265,7 @@ function ContentEditor({
                         const f = input.files?.[0];
                         try {
                           if (!f) return;
-                          const uploaded = await uploadMedia(f);
+                          const uploaded = await uploadMedia(fiche.id, f);
                           setP(si, pi, { image: uploaded.url });
                         } catch (error) {
                           window.alert(error instanceof Error ? error.message : "Échec de l'envoi de l'image.");
