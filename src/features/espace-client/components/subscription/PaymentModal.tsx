@@ -1,21 +1,39 @@
 import { useEffect, useState } from "react";
-import { FORMULES, PaymentMethod, PlanType } from "../../../../types";
+import { useMutation } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
+import { FORMULES } from "../../../../types";
+import type { PlanType } from "../../../../types";
 import { ApiFiche } from "../../api-types";
 import { formatPrice } from "../../lib/formatPrice";
+import { upgradeFichePlan } from "../../espaceClient.service";
+import { getPlan } from "./PlansPanel";
 
-
+const PLAN_RANK: Record<string, number> = {
+  ESSENTIELLE: 0,
+  ESSENTIEL: 0,
+  PRO: 1,
+  SIGNATURE: 2,
+};
 
 export function PaymentModal({
   fiche,
   onClose,
+  onSuccess,
 }: {
   fiche: ApiFiche;
   onClose: () => void;
+  onSuccess?: () => void;
 }) {
-  const [selectedPlan, setSelectedPlan] = useState<PlanType>("PRO");
-  const [method, setMethod] = useState<PaymentMethod>("WAVE");
-  const [phone, setPhone] = useState(fiche.telephone ?? "");
+  const currentPlan = (getPlan(fiche) ?? "ESSENTIELLE").toUpperCase();
+  const currentRank = PLAN_RANK[currentPlan] ?? 0;
+  const availablePlans = FORMULES.filter(
+    item => PLAN_RANK[item.id] > currentRank
+  );
+  const [selectedPlan, setSelectedPlan] = useState<PlanType>(
+    currentPlan === "PRO" ? "SIGNATURE" : "PRO"
+  );
   const [notice, setNotice] = useState("");
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -23,7 +41,25 @@ export function PaymentModal({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
-  const plan = FORMULES.find(item => item.id === selectedPlan) ?? FORMULES[1];
+
+  const plan =
+    availablePlans.find(item => item.id === selectedPlan) ??
+    availablePlans[0] ??
+    FORMULES[2];
+
+  const upgradeMutation = useMutation({
+    mutationFn: () => upgradeFichePlan(fiche.id, plan.id as Exclude<PlanType, "ESSENTIELLE">),
+    onSuccess: () => {
+      setNotice("Upgrade confirmé en mode simulation. La nouvelle formule est maintenant active.");
+      onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      const message = isAxiosError(error)
+        ? error.response?.data?.error?.message ?? "Impossible de changer la formule. Réessayez."
+        : "Une erreur inattendue est survenue.";
+      setNotice(message);
+    },
+  });
 
   return (
     <div
@@ -52,6 +88,9 @@ export function PaymentModal({
             <p className="mt-1 text-sm text-[#6d665d]">
               Fiche de {fiche.prenom} {fiche.nom}
             </p>
+            <p className="mt-1 text-xs text-[#6d665d]">
+              Formule actuelle : {currentPlan === "ESSENTIELLE" ? "Essentielle" : currentPlan === "PRO" ? "Pro" : "Signature"}
+            </p>
           </div>
           <button
             type="button"
@@ -63,127 +102,58 @@ export function PaymentModal({
           </button>
         </div>
         <div className="space-y-6 px-6 py-6 sm:px-7">
-          <fieldset>
-            <legend className="mb-3 text-sm font-semibold text-[#111111]">
-              1. Choisissez votre formule
-            </legend>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {FORMULES.map(item => (
-                <label
-                  key={item.id}
-                  className={`relative cursor-pointer rounded-2xl border p-3 transition ${selectedPlan === item.id ? "border-[#08090A] bg-[#f4f1eb] ring-1 ring-[#08090A]" : "border-[#e3dfd8] hover:border-[#08090A]"}`}
-                >
-                  <input
-                    className="sr-only"
-                    type="radio"
-                    name="subscription-plan"
-                    value={item.id}
-                    checked={selectedPlan === item.id}
-                    onChange={() => {
-                      setSelectedPlan(item.id);
-                      setNotice("");
-                    }}
-                  />
-                  <span className="block text-sm font-semibold text-[#111111]">
-                    {item.label}
-                  </span>
-                  <span className="mt-2 block text-sm font-bold text-[#08090A]">
-                    {formatPrice(item.price)}
-                  </span>
-                  <span className="mt-1 block text-xs text-[#6d665d]">
-                    {item.period}
-                  </span>
-                  {selectedPlan === item.id && (
-                    <span
-                      className="absolute right-2 top-2 text-sm text-[#EF1733]"
-                      aria-hidden="true"
-                    >
-                      ✓
-                    </span>
-                  )}
-                </label>
-              ))}
-            </div>
-          </fieldset>
-          {plan.price > 0 && (
-            <>
-              <fieldset>
-                <legend className="mb-3 text-sm font-semibold text-[#111111]">
-                  2. Moyen de paiement
-                </legend>
-                <div className="grid grid-cols-2 gap-3">
+          {availablePlans.length > 0 ? (
+            <fieldset>
+              <legend className="mb-3 text-sm font-semibold text-[#111111]">
+                Choisissez la formule supérieure
+              </legend>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {availablePlans.map(item => (
                   <label
-                    className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-4 transition ${method === "WAVE" ? "border-blue-500 bg-blue-50/70 ring-1 ring-blue-500" : "border-[#e3dfd8] hover:border-[#08090A]"}`}
+                    key={item.id}
+                    className={`relative cursor-pointer rounded-2xl border p-3 transition ${selectedPlan === item.id ? "border-[#08090A] bg-[#f4f1eb] ring-1 ring-[#08090A]" : "border-[#e3dfd8] hover:border-[#08090A]"}`}
                   >
                     <input
-                      className="accent-blue-600"
+                      className="sr-only"
                       type="radio"
-                      name="payment-method"
-                      checked={method === "WAVE"}
-                      onChange={() => setMethod("WAVE")}
+                      name="subscription-plan"
+                      value={item.id}
+                      checked={selectedPlan === item.id}
+                      onChange={() => {
+                        setSelectedPlan(item.id);
+                        setNotice("");
+                      }}
                     />
-                    <span>
-                      <span className="block text-sm font-semibold text-[#111111]">
-                        Wave
-                      </span>
-                      <span className="block text-xs text-[#6d665d]">
-                        Paiement mobile
-                      </span>
+                    <span className="block text-sm font-semibold text-[#111111]">
+                      {item.label}
                     </span>
-                  </label>
-                  <label
-                    className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-4 transition ${method === "ORANGE_MONEY" ? "border-orange-500 bg-orange-50/70 ring-1 ring-orange-500" : "border-[#e3dfd8] hover:border-[#08090A]"}`}
-                  >
-                    <input
-                      className="accent-orange-500"
-                      type="radio"
-                      name="payment-method"
-                      checked={method === "ORANGE_MONEY"}
-                      onChange={() => setMethod("ORANGE_MONEY")}
-                    />
-                    <span>
-                      <span className="block text-sm font-semibold text-[#111111]">
-                        Orange Money
-                      </span>
-                      <span className="block text-xs text-[#6d665d]">
-                        Paiement mobile
-                      </span>
+                    <span className="mt-2 block text-sm font-bold text-[#08090A]">
+                      {formatPrice(item.price)}
                     </span>
+                    <span className="mt-1 block text-xs text-[#6d665d]">
+                      {item.period}
+                    </span>
+                    {selectedPlan === item.id && (
+                      <span className="absolute right-2 top-2 text-sm text-[#EF1733]" aria-hidden="true">
+                        ✓
+                      </span>
+                    )}
                   </label>
-                </div>
-              </fieldset>
-              <div>
-                <label
-                  htmlFor="payment-phone"
-                  className="mb-2 block text-sm font-semibold text-[#111111]"
-                >
-                  3. Numéro de téléphone
-                </label>
-                <input
-                  id="payment-phone"
-                  type="tel"
-                  autoComplete="tel"
-                  value={phone}
-                  onChange={event => {
-                    setPhone(event.target.value);
-                    setNotice("");
-                  }}
-                  placeholder="+221 77 000 00 00"
-                  className="w-full rounded-xl border border-[#d4cec4] px-4 py-3 text-sm outline-none transition placeholder:text-[#8d8a85] focus:border-[#08090A] focus:ring-2 focus:ring-[#08090A]/10"
-                />
-                <p className="mt-2 text-xs leading-5 text-[#6d665d]">
-                  Utilisez le numéro associé à votre compte{" "}
-                  {method === "WAVE" ? "Wave" : "Orange Money"}.
-                </p>
+                ))}
               </div>
-            </>
-          )}
-          {plan.price === 0 && (
-            <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-800">
-              La formule Essentiel est gratuite. Aucun paiement n'est
-              nécessaire.
+            </fieldset>
+          ) : (
+            <p className="rounded-xl bg-[#f4f1eb] px-4 py-3 text-sm leading-6 text-[#4a443c]">
+              Votre fiche utilise déjà la formule la plus élevée, Signature.
             </p>
           )}
+
+          {availablePlans.length > 0 && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+              <strong>Mode simulation :</strong> aucun paiement Wave ou Orange Money ne sera effectué. En confirmant, le serveur activera immédiatement la nouvelle formule pour cette fiche.
+            </div>
+          )}
+
           {notice && (
             <p
               role="status"
@@ -194,24 +164,19 @@ export function PaymentModal({
           )}
           <button
             type="button"
-            onClick={() =>
-              setNotice(
-                plan.price === 0
-                  ? "Formule Essentiel sélectionnée. La demande de changement de formule n'est pas connectée au serveur."
-                  : phone.trim()
-                    ? "Votre sélection est prête. Le paiement n'est pas encore connecté."
-                    : "Veuillez saisir le numéro de téléphone à utiliser pour le paiement."
-              )
-            }
-            className="w-full rounded-xl bg-[#08090A] px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-slate-950/10 transition hover:bg-[#c9142b] focus:outline-none focus:ring-2 focus:ring-[#EF1733] focus:ring-offset-2"
+            onClick={() => {
+              setNotice("");
+              upgradeMutation.mutate();
+            }}
+            disabled={availablePlans.length === 0 || upgradeMutation.isPending}
+            className="w-full rounded-xl bg-[#08090A] px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-slate-950/10 transition hover:bg-[#c9142b] focus:outline-none focus:ring-2 focus:ring-[#EF1733] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {plan.price === 0
-              ? "Sélectionner Essentiel"
-              : "Préparer le paiement"}
+            {upgradeMutation.isPending
+              ? "Activation en cours…"
+              : "Confirmer l’upgrade simulé"}
           </button>
           <p className="text-center text-xs leading-5 text-[#8d8a85]">
-            Aucun paiement ne sera effectué depuis cette interface pour le
-            moment.
+            La formule sélectionnée sera appliquée à cette fiche après confirmation du serveur.
           </p>
         </div>
       </section>
