@@ -1447,7 +1447,8 @@ function ContentEditor({
                         const added: string[] = [];
                         try {
                           for (const f of files) {
-                            const uploaded = await uploadMedia(f);
+                            const prepared = await optimizeImageFile(f);
+                            const uploaded = await uploadFicheMedia(fiche.id, prepared);
                             added.push(uploaded.url);
                           }
                           if (added.length) {
