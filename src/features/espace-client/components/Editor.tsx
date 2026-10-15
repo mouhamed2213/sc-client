@@ -435,6 +435,7 @@ export default function Editor({
                   tab={t}
                   fiche={fiche}
                   plan={plan}
+                  up={up}
                   upD={upD}
                   setTabs={setTabs}
                   tabs={tabs}
@@ -621,13 +622,20 @@ const EDITABLE: TabType[] = [
   "biens",
   "catalogue",
   "galerie",
+  "videos",
   "liens",
+  "rendezvous",
+  "rappel",
+  "avis",
+  "reseaux",
+  "localisation",
 ];
 
 interface ContentEditorProps {
   tab: Onglet;
   fiche: FicheRecord;
   plan: Plan;
+  up: (patch: Partial<FicheRecord>) => void;
   upD: (patch: Partial<FicheData>) => void;
   setTabs: (t: Onglet[]) => void;
   tabs: Onglet[];
@@ -636,6 +644,7 @@ function ContentEditor({
   tab,
   fiche,
   plan,
+  up,
   upD,
   setTabs,
   tabs,
@@ -701,6 +710,180 @@ function ContentEditor({
         </div>
       );
     }
+    case "reseaux": {
+      const R = d.reseauxSociaux || [];
+      return (
+        <div className="ed-items">
+          {R.map((r, i) => (
+            <div key={i} className="ed-it2">
+              <input
+                placeholder="Réseau (ex. Instagram)"
+                aria-label={`Nom du réseau social ${i + 1}`}
+                value={r.label}
+                onChange={ev =>
+                  upD({
+                    reseauxSociaux: R.map((x, j) =>
+                      j === i ? { ...x, label: ev.target.value } : x
+                    ),
+                  })
+                }
+              />
+              <input
+                placeholder="https://..."
+                aria-label={`Adresse du réseau social ${i + 1}`}
+                value={r.url}
+                onChange={ev =>
+                  upD({
+                    reseauxSociaux: R.map((x, j) =>
+                      j === i ? { ...x, url: ev.target.value } : x
+                    ),
+                  })
+                }
+              />
+              <button
+                className="ed-del"
+                type="button"
+                aria-label={`Retirer le réseau social ${i + 1}`}
+                onClick={() => upD({ reseauxSociaux: R.filter((_, j) => j !== i) })}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          {R.length < plan.maxSocial && (
+            <button
+              className="ed-add-b"
+              type="button"
+              onClick={() => upD({ reseauxSociaux: [...R, { label: "", url: "" }] })}
+            >
+              + Ajouter un réseau social
+            </button>
+          )}
+          <small className="ed-cnt">{R.length}/{plan.maxSocial} réseaux sociaux</small>
+        </div>
+      );
+    }
+    case "rendezvous": {
+      const rdv = d.rendezVous || { label: "", url: "" };
+      return (
+        <div className="ed-items">
+          <label>
+            <span>Libellé du bouton</span>
+            <input
+              value={rdv.label}
+              maxLength={80}
+              placeholder="Ex. Prendre rendez-vous"
+              onChange={ev => upD({ rendezVous: { ...rdv, label: ev.target.value } })}
+            />
+          </label>
+          <label>
+            <span>Lien de réservation</span>
+            <input
+              value={rdv.url}
+              placeholder="https://..."
+              onChange={ev => upD({ rendezVous: { ...rdv, url: ev.target.value } })}
+            />
+          </label>
+        </div>
+      );
+    }
+    case "videos": {
+      const G = d.galerie || [];
+      const V = G.filter(media => media.type === "video");
+      const setVideos = (next: Photo[]) =>
+        upD({ galerie: [...G.filter(media => media.type !== "video"), ...next] });
+      return (
+        <div className="ed-items">
+          {V.map((video, i) => (
+            <div key={i} className="ed-it2">
+              <input
+                value={video.url}
+                placeholder="URL de la vidéo (https://...)"
+                aria-label={`URL de la vidéo ${i + 1}`}
+                onChange={ev =>
+                  setVideos(V.map((x, j) => j === i ? { ...x, url: ev.target.value } : x))
+                }
+              />
+              <button
+                className="ed-del"
+                type="button"
+                aria-label={`Retirer la vidéo ${i + 1}`}
+                onClick={() => setVideos(V.filter((_, j) => j !== i))}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          {V.length < plan.maxVideos && (
+            <button
+              className="ed-add-b"
+              type="button"
+              onClick={() => setVideos([...V, { type: "video", url: "", alt: "" }])}
+            >
+              + Ajouter une vidéo par URL
+            </button>
+          )}
+          <small className="ed-cnt">{V.length}/{plan.maxVideos} vidéos</small>
+          <p className="ed-hint">Utilisez une URL publique https://. L’import direct d’un fichier vidéo n’est pas encore disponible.</p>
+        </div>
+      );
+    }
+    case "rappel":
+      return (
+        <div className="ed-items">
+          <label>
+            <span>Téléphone pour être rappelé</span>
+            <input
+              value={fiche.telephone || ""}
+              placeholder="+221..."
+              onChange={ev => up({ telephone: ev.target.value })}
+            />
+          </label>
+          <label>
+            <span>WhatsApp</span>
+            <input
+              value={fiche.whatsapp || ""}
+              placeholder="+221..."
+              onChange={ev => up({ whatsapp: ev.target.value })}
+            />
+          </label>
+        </div>
+      );
+    case "localisation":
+      return (
+        <div className="ed-items">
+          <label>
+            <span>Adresse</span>
+            <input
+              value={fiche.adresse || ""}
+              placeholder="Adresse de l’activité"
+              onChange={ev => up({ adresse: ev.target.value })}
+            />
+          </label>
+          <label>
+            <span>Lien ou identifiant Google Maps (facultatif)</span>
+            <input
+              value={fiche.googlePlaceId || ""}
+              placeholder="Identifiant Google Place"
+              onChange={ev => up({ googlePlaceId: ev.target.value })}
+            />
+          </label>
+        </div>
+      );
+    case "avis":
+      return (
+        <div className="ed-items">
+          <label>
+            <span>Identifiant Google Place</span>
+            <input
+              value={fiche.googlePlaceId || ""}
+              placeholder="Identifiant Google Place"
+              onChange={ev => up({ googlePlaceId: ev.target.value })}
+            />
+          </label>
+          <p className="ed-hint">Cet identifiant permet d’associer les avis Google à votre établissement.</p>
+        </div>
+      );
     case "liens": {
       const L = d.liens || [];
       return (
