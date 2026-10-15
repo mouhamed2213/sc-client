@@ -59,9 +59,20 @@ export async function upgradeFichePlan(
   ficheId: number,
   plan: Exclude<PlanType, "ESSENTIELLE">
 ): Promise<UpgradePlanResponse> {
-  const response = await api.post<UpgradePlanResponse>("/subscription/upgrade", {
+  // Étape 1 : demander l'upgrade. Le backend crée un paiement PENDING,
+  // sans changer la formule active.
+  const request = await api.post<{
+    data: { payment: { id: number; reference: string | null; status: "pending" } };
+  }>("/subscription/upgrade", {
     ficheId,
     plan: plan.toLowerCase(),
   });
-  return response.data;
+
+  // Étape 2 : adaptateur de simulation (désactivé côté backend en production).
+  // L'intégration Wave/Orange Money remplacera cet appel par le parcours fournisseur.
+  const paymentId = request.data.data.payment.id;
+  const confirmation = await api.post<UpgradePlanResponse>(
+    `/subscription/payments/${paymentId}/simulate-confirmation`
+  );
+  return confirmation.data;
 }
