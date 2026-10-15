@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { useState } from "react";
 import type { ApiFiche } from "../api-types";
@@ -16,6 +16,7 @@ export type SubscriptionKpi = {
 };
 
 export default function SubscriptionPage() {
+  const queryClient = useQueryClient();
   const [paymentFiche, setPaymentFiche] = useState<ApiFiche | null>(null);
   const [showPlans, setShowPlans] = useState(false);
   // 1. Récupération des fiches
@@ -307,6 +308,14 @@ export default function SubscriptionPage() {
         <PaymentModal
           fiche={paymentFiche}
           onClose={() => setPaymentFiche(null)}
+          onSuccess={() => {
+            void queryClient.invalidateQueries({
+              queryKey: ["ficheSubscriptionPage"],
+            });
+            void queryClient.invalidateQueries({
+              queryKey: ["kpiSubscription"],
+            });
+          }}
         />
       )}
     </div>
