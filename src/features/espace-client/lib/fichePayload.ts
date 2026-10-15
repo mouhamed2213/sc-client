@@ -9,8 +9,8 @@ import type { FicheRecord } from "../../../types";
     interdit (ex. des prix sur Pro) et de provoquer un 422 pour rien ;
   - les lignes incomplètes (libellé / nom / titre vide) sont retirées : le serveur les refuse (400) et ferait
     échouer toute la sauvegarde. Elles sont comptées dans `skipped` pour prévenir l'utilisateur ;
-  - les images importées depuis l'appareil (blob: / data:) ne peuvent pas être enregistrées tant qu'il n'existe
-    pas d'envoi de fichiers : elles sont listées dans `pendingUploads` et la sauvegarde est refusée.
+  - les fichiers choisis dans Editor sont envoyés au service média avant la sauvegarde de la fiche ;
+    toute URL blob: / data: restante est refusée pour éviter de perdre une prévisualisation locale.
 */
 
 const IDENTITY = [
@@ -52,7 +52,7 @@ export interface PayloadResult {
   payload: Json | null;
   /** Lignes incomplètes retirées de la requête (pour en informer l'utilisateur). */
   skipped: string[];
-  /** Zones contenant une image importée (blob: / data:) impossible à enregistrer pour l'instant. */
+  /** Zones contenant encore une URL de prévisualisation locale blob: / data:. */
   pendingUploads: string[];
 }
 
