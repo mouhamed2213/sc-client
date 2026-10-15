@@ -24,6 +24,8 @@ export async function getDashboardFiche(
 export async function getKpi(): Promise<SubscriptionKpi> {
   try {
     const response = await api.get<SubscriptionKpi>("subscription/kpi");
+    console.log(response.data);
+
     return response.data;
   } catch (e) {
     if (axios.isAxiosError(e)) {
