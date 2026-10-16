@@ -11,13 +11,23 @@
 }
 
 .fiche-passage-panel {
+  position: relative;
   min-width: 0;
-  padding: 1.15rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  background: #fff;
+  padding: 1.25rem;
+  overflow: hidden;
+  border: 1px solid #e3e8f0;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
   color: #172033;
-  box-shadow: 0 8px 24px rgb(15 23 42 / 5%);
+  box-shadow: 0 14px 36px rgb(15 23 42 / 7%);
+}
+
+.fiche-passage-panel::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, #2563eb, #38bdf8);
+  content: "";
 }
 
 .fiche-passage-heading {
@@ -29,8 +39,9 @@
 
 .fiche-passage-heading h2 {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 1.15rem;
+  font-weight: 750;
+  letter-spacing: -0.025em;
   line-height: 1.35;
 }
 
@@ -42,14 +53,20 @@
 
 .fiche-passage-refresh {
   flex: 0 0 auto;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 1px solid #dbe1ea;
-  border-radius: 10px;
-  background: #fff;
-  color: #334155;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: #1d4ed8;
   font-size: 1.35rem;
   cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.fiche-passage-refresh:hover:not(:disabled) {
+  background: #dbeafe;
+  transform: rotate(12deg);
 }
 
 .fiche-passage-refresh:disabled {
@@ -60,8 +77,12 @@
 .fiche-passage-filters {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 0.7rem;
-  margin: 1.15rem 0;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+  padding: 0.9rem;
+  border: 1px solid #edf0f5;
+  border-radius: 14px;
+  background: #f8fafc;
 }
 
 .fiche-passage-filters label {
@@ -94,36 +115,75 @@
 .fiche-passage-cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.65rem;
+  gap: 0.7rem;
 }
 
 .fiche-passage-card {
+  position: relative;
   display: grid;
   align-content: space-between;
-  gap: 0.65rem;
+  gap: 0.8rem;
   min-width: 0;
-  min-height: 84px;
-  padding: 0.8rem;
-  border: 1px solid #e7ebf1;
-  border-radius: 12px;
-  background: #f8fafc;
+  min-height: 96px;
+  padding: 0.9rem;
+  border: 1px solid #e6ebf2;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgb(15 23 42 / 3%);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.fiche-passage-card:hover {
+  transform: translateY(-2px);
+  border-color: #cbdaf5;
+  box-shadow: 0 8px 18px rgb(15 23 42 / 7%);
+}
+
+.fiche-passage-card::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  border-radius: 15px 0 0 15px;
+  background: #cbd5e1;
+  content: "";
+}
+
+.fiche-passage-card:nth-child(1)::before {
+  background: #2563eb;
+}
+
+.fiche-passage-card:nth-child(2)::before {
+  background: #16a34a;
+}
+
+.fiche-passage-card:nth-child(3)::before {
+  background: #7c3aed;
+}
+
+.fiche-passage-card:nth-child(4)::before {
+  background: #d97706;
 }
 
 .fiche-passage-card span {
   color: #64748b;
-  font-size: 0.78rem;
-  line-height: 1.35;
+  font-size: 0.77rem;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 .fiche-passage-card strong {
-  color: #172033;
-  font-size: 1.5rem;
+  color: #111827;
+  font-size: 1.75rem;
+  font-weight: 750;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
   line-height: 1;
 }
 
 .fiche-passage-history {
-  margin-top: 1.35rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #edf0f5;
 }
 
 .fiche-passage-history h3 {
@@ -136,7 +196,8 @@
   max-width: 100%;
   overflow-x: auto;
   border: 1px solid #e7ebf1;
-  border-radius: 10px;
+  border-radius: 12px;
+  background: #fff;
 }
 
 .fiche-passage-table-wrap table {
@@ -159,9 +220,9 @@
 }
 
 .fiche-passage-table-wrap th {
-  background: #f8fafc;
-  color: #64748b;
-  font-weight: 600;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 700;
 }
 
 .fiche-passage-table-wrap tbody tr:last-child td {
@@ -202,7 +263,8 @@
   }
 
   .fiche-passage-panel {
-    padding: 0.9rem;
+    padding: 1rem;
+    border-radius: 17px;
   }
 
   .fiche-passage-cards {
@@ -210,11 +272,13 @@
   }
 
   .fiche-passage-card {
-    padding: 0.65rem;
+    min-height: 88px;
+    padding: 0.75rem;
+    border-radius: 13px;
   }
 
   .fiche-passage-card strong {
-    font-size: 1.3rem;
+    font-size: 1.45rem;
   }
 }
 
