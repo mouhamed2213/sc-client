@@ -11,6 +11,7 @@ import type {
 } from "../../../types";
 import { qrMatrix } from "../../../utils/qr";
 import { downloadVCard } from "../lib/vcard";
+import { api } from "../../../lib/api";
 import "./Fiche.css";
 
 /*
@@ -314,6 +315,8 @@ function SectionBody({ tab, fiche }: { tab: Onglet; fiche: FicheRecord }) {
   const d = fiche.data,
     plan = PLANS[fiche.formule];
   const [sent, setSent] = useState(false);
+  const [rappelSubmitting, setRappelSubmitting] = useState(false);
+  const [rappelError, setRappelError] = useState("");
   switch (tab.type) {
     case "presentation":
       return (
@@ -432,22 +435,38 @@ function SectionBody({ tab, fiche }: { tab: Onglet; fiche: FicheRecord }) {
       );
     case "rappel":
       return sent ? (
-        <p className="f-ok">Merci ! Vous serez rappelé rapidement.</p>
+        <p className="f-ok" role="status">Merci ! Votre demande a bien été envoyée à l’établissement.</p>
       ) : (
         <form
           className="f-form"
-          onSubmit={e => {
+          onSubmit={async e => {
             e.preventDefault();
-            setSent(true);
+            if (rappelSubmitting) return;
+            const form = e.currentTarget;
+            const formData = new FormData(form);
+            setRappelSubmitting(true);
+            setRappelError("");
+            try {
+              await api.post(`fiches/public/${encodeURIComponent(fiche.slug)}/rappels`, {
+                nom: String(formData.get("nom") || "").trim(),
+                telephone: String(formData.get("telephone") || "").trim(),
+              });
+              setSent(true);
+            } catch {
+              setRappelError("Impossible d’envoyer la demande. Vérifiez vos coordonnées puis réessayez.");
+            } finally {
+              setRappelSubmitting(false);
+            }
           }}
         >
           <p className="f-txt">
             Laissez vos coordonnées, l’établissement vous rappelle rapidement.
           </p>
-          <input required placeholder="Votre nom" />
-          <input required type="tel" placeholder="Votre téléphone" />
-          <button className="f-btn gold">
-            Demander un rappel <I n="arrow" s={14} />
+          <input name="nom" required minLength={2} maxLength={100} autoComplete="name" placeholder="Votre nom" />
+          <input name="telephone" required type="tel" minLength={7} maxLength={25} autoComplete="tel" placeholder="Votre téléphone" />
+          {rappelError && <p className="f-error" role="alert">{rappelError}</p>}
+          <button className="f-btn gold" type="submit" disabled={rappelSubmitting}>
+            {rappelSubmitting ? "Envoi en cours…" : "Demander un rappel"} <I n="arrow" s={14} />
           </button>
         </form>
       );
