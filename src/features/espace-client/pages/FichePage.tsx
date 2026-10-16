@@ -1,10 +1,153 @@
 import { useQuery } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../../../lib/api";
 import Fiche from "../components/Fiche";
 import { toFicheRecord, type ApiFicheDetail } from "../lib/ficheDto";
+import "./FicheStats.css";
+
+type PassageStats = {
+  ficheId: number;
+  granularity: "day" | "month";
+  filters: { date: string | null; month: string | null };
+  totals: { qr: number; nfc: number; direct: number; total: number };
+  history: Array<{
+    period: string;
+    qr: number;
+    nfc: number;
+    direct: number;
+    total: number;
+  }>;
+};
+
+function PassageStatsPanel({ ficheId }: { ficheId: number }) {
+  const [granularity, setGranularity] = useState<"day" | "month">("month");
+  const [date, setDate] = useState("");
+  const [month, setMonth] = useState("");
+
+  const statsQuery = useQuery({
+    queryKey: ["fiche-passage-stats", ficheId, granularity, date, month],
+    enabled: Number.isInteger(ficheId) && ficheId > 0,
+    queryFn: async ({ signal }) => {
+      const params = new URLSearchParams({ granularity });
+      if (granularity === "day" && date) params.set("date", date);
+      if (granularity === "month" && month) params.set("month", month);
+      const response = await api.get<{ stats: PassageStats }>(
+        `fiches/${ficheId}/stats?${params.toString()}`,
+        { signal },
+      );
+      return response.data.stats;
+    },
+  });
+
+  const stats = statsQuery.data;
+  const countCards = [
+    { label: "Total des passages", value: stats?.totals.total ?? 0, key: "total" },
+    { label: "QR code", value: stats?.totals.qr ?? 0, key: "qr" },
+    { label: "NFC", value: stats?.totals.nfc ?? 0, key: "nfc" },
+    { label: "Accès directs / autres", value: stats?.totals.direct ?? 0, key: "direct" },
+  ];
+
+  return (
+    <aside className="fiche-passage-panel" aria-labelledby="fiche-passage-title">
+      <div className="fiche-passage-heading">
+        <div>
+          <h2 id="fiche-passage-title">Statistiques des passages</h2>
+          <p>Chaque ouverture valide est comptabilisée.</p>
+        </div>
+        <button
+          type="button"
+          className="fiche-passage-refresh"
+          onClick={() => void statsQuery.refetch()}
+          disabled={statsQuery.isFetching}
+          aria-label="Actualiser les statistiques"
+          title="Actualiser"
+        >
+          {statsQuery.isFetching ? "…" : "↻"}
+        </button>
+      </div>
+
+      <div className="fiche-passage-filters">
+        <label>
+          Regroupement
+          <select
+            value={granularity}
+            onChange={event => setGranularity(event.target.value as "day" | "month")}
+          >
+            <option value="month">Par mois</option>
+            <option value="day">Par jour</option>
+          </select>
+        </label>
+        {granularity === "day" ? (
+          <label>
+            Filtrer par date
+            <input type="date" value={date} onChange={event => setDate(event.target.value)} />
+          </label>
+        ) : (
+          <label>
+            Filtrer par mois
+            <input type="month" value={month} onChange={event => setMonth(event.target.value)} />
+          </label>
+        )}
+        <p className="fiche-passage-filter-hint">
+          Sans filtre, l’historique complet est affiché.
+        </p>
+      </div>
+
+      {statsQuery.isPending ? (
+        <p className="fiche-passage-state" role="status">Chargement des statistiques…</p>
+      ) : statsQuery.isError ? (
+        <div className="fiche-passage-state" role="alert">
+          <p>Impossible de charger les statistiques.</p>
+          <button type="button" onClick={() => void statsQuery.refetch()}>Réessayer</button>
+        </div>
+      ) : (
+        <>
+          <div className="fiche-passage-cards">
+            {countCards.map(card => (
+              <div className="fiche-passage-card" key={card.key}>
+                <span>{card.label}</span>
+                <strong>{card.value.toLocaleString("fr-FR")}</strong>
+              </div>
+            ))}
+          </div>
+          <div className="fiche-passage-history">
+            <h3>Historique {granularity === "day" ? "journalier" : "mensuel"}</h3>
+            {stats?.history.length ? (
+              <div className="fiche-passage-table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>{granularity === "day" ? "Date" : "Mois"}</th>
+                      <th>Total</th>
+                      <th>QR</th>
+                      <th>NFC</th>
+                      <th>Direct</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...stats.history].reverse().map(row => (
+                      <tr key={row.period}>
+                        <td>{row.period}</td>
+                        <td>{row.total.toLocaleString("fr-FR")}</td>
+                        <td>{row.qr.toLocaleString("fr-FR")}</td>
+                        <td>{row.nfc.toLocaleString("fr-FR")}</td>
+                        <td>{row.direct.toLocaleString("fr-FR")}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="fiche-passage-empty">Aucun passage enregistré pour cette période.</p>
+            )}
+          </div>
+        </>
+      )}
+    </aside>
+  );
+}
 
 export function FichePage() {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +167,7 @@ export function FichePage() {
     queryFn: async ({ signal }) => {
       const response = await api.get<{ fiche: ApiFicheDetail }>(
         `fiches/${ficheId}`,
-        { signal }
+        { signal },
       );
       return toFicheRecord(response.data.fiche);
     },
@@ -85,14 +228,17 @@ export function FichePage() {
     >
       <div className="fiche-preview-toolbar">
         <Link to="/espace-client">← Retour au tableau de bord</Link>
-        <span>Prévisualisation privée · aucun passage comptabilisé</span>
+        <span>La prévisualisation privée ne compte pas comme passage.</span>
       </div>
-      <div className="fiche-preview-stage">
-        <div className="fiche-preview-device">
-          <div className="fiche-preview-device-in" ref={phoneScroller}>
-            <Fiche key={fiche.id} fiche={fiche} scrollerRef={phoneScroller} />
+      <div className="fiche-preview-layout">
+        <div className="fiche-preview-stage">
+          <div className="fiche-preview-device">
+            <div className="fiche-preview-device-in" ref={phoneScroller}>
+              <Fiche key={fiche.id} fiche={fiche} scrollerRef={phoneScroller} />
+            </div>
           </div>
         </div>
+        <PassageStatsPanel ficheId={fiche.id} />
       </div>
     </section>
   );
