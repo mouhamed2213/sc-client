@@ -34,10 +34,10 @@ import type {
   Taille,
   Theme,
 } from "../../../types";
-import { I, QR } from "./Fiche";
-import { optimizeImageFile } from "../services/mediaOptimizer";
 import { uploadFicheMedia } from "../services/media.service";
+import { optimizeImageFile } from "../services/mediaOptimizer";
 import "./Editor.css";
+import { I, QR } from "./Fiche";
 
 /*
   Espace client (back-office membre).
@@ -66,7 +66,9 @@ const toURL = (f: Blob) => URL.createObjectURL(f);
 
 /** Upload helper shared by Editor and ContentEditor (separate component scope). */
 async function uploadMedia(ficheId: number, file: File) {
-  const prepared = file.type.startsWith("image/") ? await optimizeImageFile(file) : file;
+  const prepared = file.type.startsWith("image/")
+    ? await optimizeImageFile(file)
+    : file;
   return uploadFicheMedia(ficheId, prepared);
 }
 
@@ -240,7 +242,8 @@ export default function Editor({
     return () => clearTimeout(id);
   }, [undo]);
   const file =
-    (cb: (url: string) => void) => async (ev: ChangeEvent<HTMLInputElement>) => {
+    (cb: (url: string) => void) =>
+    async (ev: ChangeEvent<HTMLInputElement>) => {
       const input = ev.currentTarget;
       const f = input.files?.[0];
       try {
@@ -249,7 +252,9 @@ export default function Editor({
           cb(media.url);
         }
       } catch (error) {
-        window.alert(error instanceof Error ? error.message : "Échec de l'envoi du média.");
+        window.alert(
+          error instanceof Error ? error.message : "Échec de l'envoi du média."
+        );
       } finally {
         input.value = "";
       }
@@ -547,7 +552,7 @@ export default function Editor({
               accept="image/jpeg,image/png,image/webp"
               onChange={file(u => up({ logo: u }))}
             />
-            {fiche.logo ? <img src={fiche.logo} alt="" /> : <I n="image" />}
+9            {fiche.logo ? <img src={fiche.logo} alt="" /> : <I n="image" />}
             <span>Logo</span>
           </label>
         </div>
@@ -705,7 +710,15 @@ function ContentEditor({
       // ADAPTATION (hors référence) : une fiche neuve de l'API n'a AUCUN horaire en base. On affiche donc
       // toujours les 7 jours ; un jour laissé vide n'est pas enregistré. Avec des données déjà complètes
       // (cas de la référence), le rendu et le comportement sont identiques.
-      const JOURS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+      const JOURS = [
+        "Lundi",
+        "Mardi",
+        "Mercredi",
+        "Jeudi",
+        "Vendredi",
+        "Samedi",
+        "Dimanche",
+      ];
       const H = d.horaires || [];
       const valeur = (j: string) => H.find(h => h.jour === j)?.horaire ?? "";
       return (
@@ -763,7 +776,9 @@ function ContentEditor({
                 className="ed-del"
                 type="button"
                 aria-label={`Retirer le réseau social ${i + 1}`}
-                onClick={() => upD({ reseauxSociaux: R.filter((_, j) => j !== i) })}
+                onClick={() =>
+                  upD({ reseauxSociaux: R.filter((_, j) => j !== i) })
+                }
               >
                 ×
               </button>
@@ -773,12 +788,16 @@ function ContentEditor({
             <button
               className="ed-add-b"
               type="button"
-              onClick={() => upD({ reseauxSociaux: [...R, { label: "", url: "" }] })}
+              onClick={() =>
+                upD({ reseauxSociaux: [...R, { label: "", url: "" }] })
+              }
             >
               + Ajouter un réseau social
             </button>
           )}
-          <small className="ed-cnt">{R.length}/{plan.maxSocial} réseaux sociaux</small>
+          <small className="ed-cnt">
+            {R.length}/{plan.maxSocial} réseaux sociaux
+          </small>
         </div>
       );
     }
@@ -792,7 +811,9 @@ function ContentEditor({
               value={rdv.label}
               maxLength={80}
               placeholder="Ex. Prendre rendez-vous"
-              onChange={ev => upD({ rendezVous: { ...rdv, label: ev.target.value } })}
+              onChange={ev =>
+                upD({ rendezVous: { ...rdv, label: ev.target.value } })
+              }
             />
           </label>
           <label>
@@ -800,7 +821,9 @@ function ContentEditor({
             <input
               value={rdv.url}
               placeholder="https://..."
-              onChange={ev => upD({ rendezVous: { ...rdv, url: ev.target.value } })}
+              onChange={ev =>
+                upD({ rendezVous: { ...rdv, url: ev.target.value } })
+              }
             />
           </label>
         </div>
@@ -810,7 +833,9 @@ function ContentEditor({
       const G = d.galerie || [];
       const V = G.filter(media => media.type === "video");
       const setVideos = (next: Photo[]) =>
-        upD({ galerie: [...G.filter(media => media.type !== "video"), ...next] });
+        upD({
+          galerie: [...G.filter(media => media.type !== "video"), ...next],
+        });
       return (
         <div className="ed-items">
           {V.map((video, i) => (
@@ -820,7 +845,11 @@ function ContentEditor({
                 placeholder="URL de la vidéo (https://...)"
                 aria-label={`URL de la vidéo ${i + 1}`}
                 onChange={ev =>
-                  setVideos(V.map((x, j) => j === i ? { ...x, url: ev.target.value } : x))
+                  setVideos(
+                    V.map((x, j) =>
+                      j === i ? { ...x, url: ev.target.value } : x
+                    )
+                  )
                 }
               />
               <button
@@ -837,45 +866,58 @@ function ContentEditor({
             <button
               className="ed-add-b"
               type="button"
-              onClick={() => setVideos([...V, { type: "video", url: "", alt: "" }])}
+              onClick={() =>
+                setVideos([...V, { type: "video", url: "", alt: "" }])
+              }
             >
               + Ajouter une vidéo par URL
             </button>
           )}
-          <small className="ed-cnt">{V.length}/{plan.maxVideos} vidéos</small>
+          <small className="ed-cnt">
+            {V.length}/{plan.maxVideos} vidéos
+          </small>
           <label className="ed-add-b">
-              <input
-                type="file"
-                accept="video/mp4,video/webm"
-                style={{ display: "none" }}
-                disabled={V.length >= plan.maxVideos}
-                onChange={async ev => {
-                  const input = ev.currentTarget;
-                  const selected = input.files?.[0];
-                  try {
-                    if (!selected || !/^video\/(mp4|webm)$/.test(selected.type)) return;
-                    const current = latest.current.data.galerie || [];
-                    const videos = current.filter(media => media.type === "video");
-                    if (videos.length >= plan.maxVideos) return;
-                    const uploaded = await uploadMedia(fiche.id, selected);
-                    const latestGallery = latest.current.data.galerie || [];
-                    upD({
-                      galerie: [
-                        ...latestGallery.filter(media => media.type !== "video"),
-                        ...videos,
-                        { type: "video", url: uploaded.url, alt: "" },
-                      ],
-                    });
-                  } catch (error) {
-                    window.alert(error instanceof Error ? error.message : "Échec de l'envoi de la vidéo.");
-                  } finally {
-                    input.value = "";
-                  }
-                }}
-              />
-              + Importer une vidéo
-            </label>
-            <p className="ed-hint">Formats acceptés : MP4 et WebM, 30 Mo maximum par vidéo.</p>
+            <input
+              type="file"
+              accept="video/mp4,video/webm"
+              style={{ display: "none" }}
+              disabled={V.length >= plan.maxVideos}
+              onChange={async ev => {
+                const input = ev.currentTarget;
+                const selected = input.files?.[0];
+                try {
+                  if (!selected || !/^video\/(mp4|webm)$/.test(selected.type))
+                    return;
+                  const current = latest.current.data.galerie || [];
+                  const videos = current.filter(
+                    media => media.type === "video"
+                  );
+                  if (videos.length >= plan.maxVideos) return;
+                  const uploaded = await uploadMedia(fiche.id, selected);
+                  const latestGallery = latest.current.data.galerie || [];
+                  upD({
+                    galerie: [
+                      ...latestGallery.filter(media => media.type !== "video"),
+                      ...videos,
+                      { type: "video", url: uploaded.url, alt: "" },
+                    ],
+                  });
+                } catch (error) {
+                  window.alert(
+                    error instanceof Error
+                      ? error.message
+                      : "Échec de l'envoi de la vidéo."
+                  );
+                } finally {
+                  input.value = "";
+                }
+              }}
+            />
+            + Importer une vidéo
+          </label>
+          <p className="ed-hint">
+            Formats acceptés : MP4 et WebM, 30 Mo maximum par vidéo.
+          </p>
         </div>
       );
     }
@@ -932,7 +974,10 @@ function ContentEditor({
               onChange={ev => up({ googlePlaceId: ev.target.value })}
             />
           </label>
-          <p className="ed-hint">Cet identifiant permet d’associer les avis Google à votre établissement.</p>
+          <p className="ed-hint">
+            Cet identifiant permet d’associer les avis Google à votre
+            établissement.
+          </p>
         </div>
       );
     case "liens": {
@@ -995,7 +1040,9 @@ function ContentEditor({
               <img src={g.url} alt={g.alt || ""} />
               <button
                 onClick={() =>
-                  upD({ galerie: allMedia.filter(media => media.url !== g.url) })
+                  upD({
+                    galerie: allMedia.filter(media => media.url !== g.url),
+                  })
                 }
               >
                 ×
@@ -1024,7 +1071,11 @@ function ContentEditor({
                       upD({ galerie: [...current, ...add] });
                     }
                   } catch (error) {
-                    window.alert(error instanceof Error ? error.message : "Échec de l'envoi d'une image.");
+                    window.alert(
+                      error instanceof Error
+                        ? error.message
+                        : "Échec de l'envoi d'une image."
+                    );
                     if (add.length) {
                       const current = latest.current.data.galerie || [];
                       upD({ galerie: [...current, ...add] });
@@ -1073,21 +1124,28 @@ function ContentEditor({
                         try {
                           if (!f) return;
                           const uploaded = await uploadMedia(fiche.id, f);
-                          const currentSections = latest.current.data.sections || [];
+                          const currentSections =
+                            latest.current.data.sections || [];
                           setS(
                             currentSections.map((x, j) =>
                               j === si
                                 ? {
                                     ...x,
                                     articles: x.articles.map((y, k) =>
-                                      k === ai ? { ...y, photo: uploaded.url } : y
+                                      k === ai
+                                        ? { ...y, photo: uploaded.url }
+                                        : y
                                     ),
                                   }
                                 : x
                             )
                           );
                         } catch (error) {
-                          window.alert(error instanceof Error ? error.message : "Échec de l'envoi de l'image.");
+                          window.alert(
+                            error instanceof Error
+                              ? error.message
+                              : "Échec de l'envoi de l'image."
+                          );
                         } finally {
                           input.value = "";
                         }
@@ -1217,7 +1275,8 @@ function ContentEditor({
           const f = ev.target.files![0];
           ev.target.value = "";
           if (!f || !/^video\/(mp4|webm)$/.test(f.type)) {
-            if (f) setErr("Format vidéo non pris en charge. Utilisez MP4 ou WebM.");
+            if (f)
+              setErr("Format vidéo non pris en charge. Utilisez MP4 ou WebM.");
             return;
           }
           const localUrl = toURL(f);
@@ -1225,7 +1284,9 @@ function ContentEditor({
           v.preload = "metadata";
           v.onloadedmetadata = async () => {
             if (v.duration > plan.maxMenuVideoSeconds! + 0.5) {
-              setErr(`Vidéo trop longue : ${plan.maxMenuVideoSeconds} secondes maximum.`);
+              setErr(
+                `Vidéo trop longue : ${plan.maxMenuVideoSeconds} secondes maximum.`
+              );
               URL.revokeObjectURL(localUrl);
               return;
             }
@@ -1234,7 +1295,11 @@ function ContentEditor({
               const uploaded = await uploadMedia(fiche.id, f);
               setP(si, pi, { video: uploaded.url });
             } catch (error) {
-              setErr(error instanceof Error ? error.message : "Échec de l'envoi de la vidéo.");
+              setErr(
+                error instanceof Error
+                  ? error.message
+                  : "Échec de l'envoi de la vidéo."
+              );
             } finally {
               URL.revokeObjectURL(localUrl);
             }
@@ -1270,7 +1335,11 @@ function ContentEditor({
                           const uploaded = await uploadMedia(fiche.id, f);
                           setP(si, pi, { image: uploaded.url });
                         } catch (error) {
-                          window.alert(error instanceof Error ? error.message : "Échec de l'envoi de l'image.");
+                          window.alert(
+                            error instanceof Error
+                              ? error.message
+                              : "Échec de l'envoi de l'image."
+                          );
                         } finally {
                           input.value = "";
                         }
@@ -1369,7 +1438,9 @@ function ContentEditor({
       const Bs = d.biens || [];
       const setB = (i: number, patch: Partial<Bien>) => {
         const current = latest.current.data.biens || [];
-        upD({ biens: current.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
+        upD({
+          biens: current.map((x, j) => (j === i ? { ...x, ...patch } : x)),
+        });
       };
       return (
         <div className="ed-items">
@@ -1449,25 +1520,41 @@ function ContentEditor({
                           .filter(f => /^image\/(jpeg|png|webp)$/.test(f.type))
                           .slice(
                             0,
-                            Math.max(0, plan.maxPhotosPerBien! - (b.photos || []).length)
+                            Math.max(
+                              0,
+                              plan.maxPhotosPerBien! - (b.photos || []).length
+                            )
                           );
                         const added: string[] = [];
                         try {
                           for (const f of files) {
                             const prepared = await optimizeImageFile(f);
-                            const uploaded = await uploadFicheMedia(fiche.id, prepared);
+                            const uploaded = await uploadFicheMedia(
+                              fiche.id,
+                              prepared
+                            );
                             added.push(uploaded.url);
                           }
                           if (added.length) {
                             const current = latest.current.data.biens?.[i];
-                            if (current) setB(i, { photos: [...(current.photos || []), ...added] });
+                            if (current)
+                              setB(i, {
+                                photos: [...(current.photos || []), ...added],
+                              });
                           }
                         } catch (error) {
                           if (added.length) {
                             const current = latest.current.data.biens?.[i];
-                            if (current) setB(i, { photos: [...(current.photos || []), ...added] });
+                            if (current)
+                              setB(i, {
+                                photos: [...(current.photos || []), ...added],
+                              });
                           }
-                          window.alert(error instanceof Error ? error.message : "Échec de l'envoi d'une photo du bien.");
+                          window.alert(
+                            error instanceof Error
+                              ? error.message
+                              : "Échec de l'envoi d'une photo du bien."
+                          );
                         } finally {
                           input.value = "";
                         }
