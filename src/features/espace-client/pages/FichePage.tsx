@@ -366,6 +366,14 @@ export function FichePage() {
     >
       <div className="fiche-preview-toolbar">
         <Link to="/espace-client">← Retour au tableau de bord</Link>
+        <a
+          href={`/f/${encodeURIComponent(fiche.slug)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fiche-public-link"
+        >
+          Fiche publique ↗
+        </a>
         <span>La prévisualisation privée ne compte pas comme passage.</span>
       </div>
       <div className="fiche-preview-layout">
