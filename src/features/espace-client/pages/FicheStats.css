@@ -1,6 +1,6 @@
 .fiche-preview-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(310px, 380px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
   gap: 1.25rem;
   padding: 1rem;
@@ -245,7 +245,7 @@
   cursor: pointer;
 }
 
-@media (max-width: 1050px) {
+@media (max-width: 900px) {
   .fiche-preview-layout {
     grid-template-columns: minmax(0, 1fr);
   }
