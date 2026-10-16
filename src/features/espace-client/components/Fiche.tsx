@@ -538,7 +538,7 @@ export default function Fiche({
   const [open, setOpen] = useState(
     () => new Set(tabs.slice(0, 1).map(t => t.id))
   );
-  const url = baseUrl + fiche.slug;
+  const url = `${baseUrl}${fiche.slug}?source=qr`;
   const name = `${fiche.prenom} ${fiche.nom}`.trim();
   const actions = [
     fiche.whatsapp && {
