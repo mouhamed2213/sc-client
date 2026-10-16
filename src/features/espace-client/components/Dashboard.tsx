@@ -280,6 +280,14 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
                     </span>
                     <span className="db-act">
                       <button onClick={() => onView(f.slug)}>Voir</button>
+                      <a
+                        className="db-public-link"
+                        href={publicUrl(f.slug)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Fiche publique
+                      </a>
                       <button className="pri" onClick={() => onEdit(f.id)}>
                         Modifier
                       </button>
