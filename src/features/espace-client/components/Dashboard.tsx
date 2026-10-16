@@ -282,7 +282,7 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
                       <button onClick={() => onView(f.slug)}>Voir</button>
                       <a
                         className="db-public-link"
-                        href={publicUrl(f.slug)}
+                        href={`/f/${encodeURIComponent(f.slug)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
