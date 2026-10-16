@@ -217,3 +217,34 @@
     font-size: 1.3rem;
   }
 }
+
+
+.fiche-public-page {
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: #fff;
+}
+
+.fiche-public-state {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.75rem;
+  min-height: 100dvh;
+  padding: 2rem;
+  box-sizing: border-box;
+  background: #f8fafc;
+  color: #172033;
+  text-align: center;
+}
+
+.fiche-public-state h1,
+.fiche-public-state p {
+  margin: 0;
+}
+
+.fiche-public-state a {
+  color: #172033;
+  font-weight: 600;
+}
