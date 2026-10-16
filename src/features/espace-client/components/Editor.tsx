@@ -667,6 +667,8 @@ function ContentEditor({
   tabs,
 }: ContentEditorProps) {
   const d = fiche.data;
+  const latest = useRef(fiche);
+  latest.current = fiche;
   const [err, setErr] = useState("");
   switch (tab.type) {
     case "presentation":

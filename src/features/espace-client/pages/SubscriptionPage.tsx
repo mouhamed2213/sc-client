@@ -4,7 +4,12 @@ import { useState } from "react";
 import type { ApiFiche } from "../api-types";
 import { StatCard } from "../components/StatCard";
 import { PaymentModal } from "../components/subscription/PaymentModal";
-import { getPlan, initials, PlanPill, PlansPanel } from "../components/subscription/PlansPanel";
+import {
+  getPlan,
+  initials,
+  PlanPill,
+  PlansPanel,
+} from "../components/subscription/PlansPanel";
 import { getDashboardFiche, getKpi } from "../espaceClient.service";
 
 export type SubscriptionKpi = {
