@@ -416,3 +416,16 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+
+.f-error {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.f-form button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
