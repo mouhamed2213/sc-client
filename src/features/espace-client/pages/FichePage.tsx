@@ -91,7 +91,10 @@ function PassageStatsPanel({ ficheId }: { ficheId: number }) {
           </label>
         )}
         <p className="fiche-passage-filter-hint">
-          Sans filtre, l’historique complet est affiché.
+          Sans filtre, tout l’historique détaillé disponible est affiché.
+        </p>
+        <p className="fiche-passage-filter-hint">
+          Les anciens compteurs sans date ni source ne peuvent pas être répartis rétroactivement entre QR, NFC et accès directs.
         </p>
       </div>
 
