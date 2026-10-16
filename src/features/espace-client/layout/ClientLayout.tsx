@@ -56,6 +56,12 @@ const NAV: {
     match: p => p.startsWith(`${BASE}/editeur`),
   },
   {
+    to: `${BASE}/demandes-rappel`,
+    label: "Demandes de rappel",
+    icon: "out",
+    match: p => p.startsWith(`${BASE}/demandes-rappel`),
+  },
+  {
     to: `${BASE}/abonnements`,
     label: "Abonnements & formules",
     icon: "creditCard",
