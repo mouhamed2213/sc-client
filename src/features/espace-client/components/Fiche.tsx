@@ -540,8 +540,9 @@ interface Action {
 export default function Fiche({
   fiche,
   scrollerRef,
-  baseUrl = "https://supportconnecte.com/f/",
+  baseUrl,
 }: FicheProps) {
+  const publicAppUrl = (import.meta.env.VITE_PUBLIC_APP_URL || window.location.origin).replace(/\/+$/, "");
   const root = useRef<HTMLDivElement>(null);
   const [held, setHeld] = usePullQR(root, scrollerRef);
   const plan = PLANS[fiche.formule];
@@ -557,7 +558,7 @@ export default function Fiche({
   const [open, setOpen] = useState(
     () => new Set(tabs.slice(0, 1).map(t => t.id))
   );
-  const url = `${baseUrl}${fiche.slug}?source=qr`;
+  const url = `${baseUrl ?? `${publicAppUrl}/f/`}${fiche.slug}?source=qr`;
   const name = `${fiche.prenom} ${fiche.nom}`.trim();
   const actions = [
     fiche.whatsapp && {
@@ -716,7 +717,7 @@ export default function Fiche({
           <div>
             <span>Mentions légales · Confidentialité</span>
             <a
-              href="https://supportconnecte.com"
+              href={publicAppUrl}
               target="_blank"
               rel="noreferrer"
             >
