@@ -732,7 +732,7 @@ export default function Fiche({
           {fiche.enLigneSeule && (
             <a
               className="f-badge"
-              href="https://supportconnecte.com"
+              href={publicAppUrl}
               target="_blank"
               rel="noreferrer"
             >
