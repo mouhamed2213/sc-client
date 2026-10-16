@@ -30,6 +30,7 @@ import PanneauxPage from "./pages/PanneauxPage";
 import QrSmartPage from "./pages/QrSmartPage";
 import SecteursPage from "./pages/SecteursPage";
 import { FichePage } from "./features/espace-client/pages/FichePage";
+import PublicFichePage from "./features/espace-client/pages/PublicFichePage";
 import SubscriptionPage from "./features/espace-client/pages/SubscriptionPage";
 
 // Pages chargées à la demande
@@ -103,6 +104,9 @@ export default function App() {
       <ScrollToTop />
       <Suspense fallback={<Wait />}>
         <Routes>
+          {/* Ouverture publique des fiches connectées (sans le header du site) */}
+          <Route path="/f/:slug" element={<PublicFichePage />} />
+
           {/* Pages publiques */}
           <Route element={<PublicLayout />}>
             <Route path="/" element={<HomePage />} />
