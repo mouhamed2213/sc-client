@@ -55,9 +55,19 @@ async function uploadLocalMediaReferences(
       type: mime,
       lastModified: Date.now(),
     });
-    const prepared = mime.startsWith("image/")
-      ? await optimizeImageFile(file)
-      : file;
+    let prepared: File;
+    try {
+      prepared = mime.startsWith("image/")
+        ? await optimizeImageFile(file)
+        : file;
+    } catch (error) {
+      throw new FicheError(
+        error instanceof Error
+          ? error.message
+          : "Impossible de préparer le média pour l'envoi.",
+        "upload"
+      );
+    }
 
     let url: string;
     try {
