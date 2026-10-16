@@ -5,6 +5,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../../../lib/api";
 import Fiche from "../../espace-client/components/Fiche";
 import { toFicheRecord, type ApiFicheDetail } from "../../espace-client/lib/ficheDto";
+import "./FicheStats.css";
 
 type PassageSource = "qr" | "nfc" | "direct";
 
@@ -12,7 +13,7 @@ export default function PublicFichePage() {
   const { slug = "" } = useParams<{ slug: string }>();
   const [searchParams] = useSearchParams();
   const scrollerRef = useRef<HTMLDivElement>(null);
-  const passageKey = useRef<{ slug: string; key: string } | null>(null);
+  const passageKey = useRef<{ slug: string; source: PassageSource; key: string } | null>(null);
   const requestedSource = searchParams.get("source");
   const source: PassageSource =
     requestedSource === "qr" || requestedSource === "nfc" ? requestedSource : "direct";
@@ -32,12 +33,10 @@ export default function PublicFichePage() {
 
   useEffect(() => {
     if (!ficheQuery.data || !slug) return;
-    if (!passageKey.current || passageKey.current.slug !== slug) {
-      passageKey.current = { slug, key: crypto.randomUUID() };
+    if (!passageKey.current || passageKey.current.slug !== slug || passageKey.current.source !== source) {
+      passageKey.current = { slug, source, key: crypto.randomUUID() };
     }
     const idempotencyKey = passageKey.current.key;
-    let cancelled = false;
-
     void api.post(
       `fiches/public/${encodeURIComponent(slug)}/passages`,
       { source, idempotencyKey },
@@ -45,10 +44,6 @@ export default function PublicFichePage() {
       // L'affichage public reste disponible si le suivi statistique est temporairement indisponible.
     });
 
-    return () => {
-      cancelled = true;
-      void cancelled;
-    };
   }, [ficheQuery.data, slug, source]);
 
   if (ficheQuery.isPending) {
