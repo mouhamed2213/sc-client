@@ -30,6 +30,7 @@ import PanneauxPage from "./pages/PanneauxPage";
 import QrSmartPage from "./pages/QrSmartPage";
 import SecteursPage from "./pages/SecteursPage";
 import { FichePage } from "./features/espace-client/pages/FichePage";
+import CallbackRequestsPage from "./features/espace-client/pages/CallbackRequestsPage";
 import PublicFichePage from "./features/espace-client/pages/PublicFichePage";
 import SubscriptionPage from "./features/espace-client/pages/SubscriptionPage";
 
@@ -137,6 +138,7 @@ export default function App() {
           <Route path="/espace-client" element={<ClientLayout />}>
             <Route index element={<DashboardPage />} />
             <Route path="fiche/preview/:id" element={<FichePage />} />
+            <Route path="demandes-rappel" element={<CallbackRequestsPage />} />
             <Route path="editeur" element={<EditorPage />} />
             <Route path="editeur/:id" element={<EditorPage />} />
             <Route path="abonnements" element={<SubscriptionPage />} />
