@@ -1,9 +1,9 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
 
-// baseURL : import.meta.VITE_API_URL,
+// VITE_API_URL doit contenir la base de l’API, y compris /api (ex. https://api.example.com/api).
 
 export const api = axios.create({
-  baseURL: "http://localhost:4000/api",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000/api",
   headers: {
     "Content-Type": "application/json",
   },
