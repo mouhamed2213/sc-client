@@ -2,6 +2,102 @@ import { isAxiosError } from "axios";
 import { api } from "../../../lib/api";
 import type { FicheRecord } from "../../../types";
 import { FICHES } from "../data/mockFiches";
+import { uploadFicheMedia } from "../services/media.service";
+import { optimizeImageFile } from "../services/mediaOptimizer";
+
+const LOCAL_MEDIA_URL = /^(blob:|data:)/i;
+const SUPPORTED_LOCAL_MEDIA = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "video/mp4",
+  "video/webm",
+]);
+
+/**
+ * Dernier recours pour les chemins qui laissent encore une URL locale dans le brouillon.
+ * Le fichier est envoyé au stockage avant le PATCH et l'URL temporaire est remplacée
+ * par la référence stable renvoyée par l'API.
+ */
+async function uploadLocalMediaReferences(
+  value: unknown,
+  ficheId: number,
+  uploadedBySource = new Map<string, string>()
+): Promise<unknown> {
+  if (typeof value === "string") {
+    if (!LOCAL_MEDIA_URL.test(value)) return value;
+
+    const existing = uploadedBySource.get(value);
+    if (existing) return existing;
+
+    let blob: Blob;
+    try {
+      const response = await fetch(value);
+      if (!response.ok) throw new Error("Lecture du fichier local impossible.");
+      blob = await response.blob();
+    } catch {
+      throw new FicheError(
+        "Un média local n'est plus accessible. Sélectionnez-le de nouveau avant d'enregistrer.",
+        "upload"
+      );
+    }
+
+    const mime = blob.type.split(";")[0].trim().toLowerCase();
+    if (!SUPPORTED_LOCAL_MEDIA.has(mime)) {
+      throw new FicheError(
+        "Format de média non pris en charge. Utilisez JPEG, PNG, WebP, MP4 ou WebM.",
+        "upload"
+      );
+    }
+
+    const extension = mime === "image/jpeg" ? "jpg" : mime.split("/")[1];
+    const file = new File([blob], `media-local.${extension}`, {
+      type: mime,
+      lastModified: Date.now(),
+    });
+    const prepared = mime.startsWith("image/")
+      ? await optimizeImageFile(file)
+      : file;
+
+    let url: string;
+    try {
+      url = (await uploadFicheMedia(ficheId, prepared)).url;
+    } catch (error) {
+      throw toFicheError(error);
+    }
+
+    uploadedBySource.set(value, url);
+    return url;
+  }
+
+  if (Array.isArray(value)) {
+    return Promise.all(
+      value.map(item => uploadLocalMediaReferences(item, ficheId, uploadedBySource))
+    );
+  }
+
+  if (value && typeof value === "object") {
+    const entries = await Promise.all(
+      Object.entries(value as Record<string, unknown>).map(async ([key, item]) => [
+        key,
+        await uploadLocalMediaReferences(item, ficheId, uploadedBySource),
+      ] as const)
+    );
+    return Object.fromEntries(entries);
+  }
+
+  return value;
+}
+
+function hasLocalMediaReference(value: unknown): boolean {
+  if (typeof value === "string") return LOCAL_MEDIA_URL.test(value);
+  if (Array.isArray(value)) return value.some(hasLocalMediaReference);
+  if (value && typeof value === "object") {
+    return Object.values(value as Record<string, unknown>).some(hasLocalMediaReference);
+  }
+  return false;
+}
+
 import { toFicheRecord, type ApiFicheDetail } from "./ficheDto";
 import { buildUpdatePayload, labelForChamp } from "./fichePayload";
 
@@ -91,18 +187,23 @@ export const apiSource: FicheSource = {
   },
 
   async save(draft, previous) {
-    const { payload, skipped, pendingUploads } = buildUpdatePayload(previous, draft);
-
-    // Pas d'envoi de fichiers côté serveur pour l'instant : on refuse plutôt que de perdre silencieusement une image.
-    if (pendingUploads.length)
-      throw new FicheError(
-        `Des images importées depuis cet appareil ne peuvent pas encore être enregistrées : ${pendingUploads.join(", ")}. ` +
-          "Retirez-les pour enregistrer le reste (l'envoi de fichiers n'est pas encore disponible).",
-        "upload"
-      );
-    if (!payload) return { fiche: previous, notes: [] };
+    const { payload: originalPayload, skipped, pendingUploads } = buildUpdatePayload(previous, draft);
+    if (!originalPayload) return { fiche: previous, notes: [] };
 
     try {
+      // Les contrôles de l'éditeur téléversent normalement les fichiers dès leur sélection.
+      // Ce passage couvre les chemins qui laisseraient encore blob:/data: dans le brouillon.
+      const payload = pendingUploads.length
+        ? await uploadLocalMediaReferences(originalPayload, draft.id)
+        : originalPayload;
+
+      if (hasLocalMediaReference(payload)) {
+        throw new FicheError(
+          "Un média local n'a pas pu être envoyé. Sélectionnez de nouveau le fichier avant d'enregistrer.",
+          "upload"
+        );
+      }
+
       const res = await api.patch<{ fiche: ApiFicheDetail }>(`fiches/${draft.id}`, payload);
       const notes = skipped.length ? [`Ignoré car incomplet : ${skipped.join(", ")}.`] : [];
       return { fiche: toFicheRecord(res.data.fiche), notes };
