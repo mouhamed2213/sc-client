@@ -903,16 +903,16 @@ function ContentEditor({
                   if (!selected || !/^video\/(mp4|webm)$/.test(selected.type))
                     return;
                   const current = latest.current.data.galerie || [];
-                  const videos = current.filter(
-                    media => media.type === "video"
-                  );
+                  const videos = current.filter(media => media.type === "video");
                   if (videos.length >= plan.maxVideos) return;
-                  const uploaded = await uploadMedia(fiche.id, selected);
+                  const uploaded = await uploadMedia(fiche.id, selected, "menu");
                   const latestGallery = latest.current.data.galerie || [];
+                  const latestVideos = latestGallery.filter(media => media.type === "video");
+                  if (latestVideos.length >= plan.maxVideos) return;
                   upD({
                     galerie: [
                       ...latestGallery.filter(media => media.type !== "video"),
-                      ...videos,
+                      ...latestVideos,
                       { type: "video", url: uploaded.url, alt: "" },
                     ],
                   });

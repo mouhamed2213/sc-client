@@ -19,7 +19,10 @@ export async function uploadFicheMedia(
     file,
     {
       params: purpose ? { purpose } : undefined,
-      headers: { "Content-Type": file.type },
+      headers: {
+        "Content-Type": file.type,
+        "X-Filename": encodeURIComponent(file.name || "media"),
+      },
       transformRequest: [data => data],
     }
   );
