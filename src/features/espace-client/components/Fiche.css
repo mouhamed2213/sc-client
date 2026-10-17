@@ -1184,3 +1184,9 @@
   flex: 1;
   min-width: 0;
 }
+/* Vidéos */
+.f-vids{display:grid;gap:12px}
+.f-vid{position:relative;width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000}
+.f-vid.v{aspect-ratio:9/16;max-height:560px;margin-inline:auto}
+.f-vid iframe,.f-vid video{position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:contain}
+.f-vid-link{display:inline-flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;border:1px solid currentColor;text-decoration:none;color:inherit;font-weight:600}

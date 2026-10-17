@@ -1,6 +1,8 @@
 import type { Dispatch, ReactNode, RefObject, SetStateAction } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { api } from "../../../lib/api";
 import { cssVars } from "../../../lib/css";
+import { ENV } from "../../../lib/env";
 import { TAB_TYPES, planOf, visibleTabs } from "../../../lib/plans";
 import type {
   BienData as Bien,
@@ -11,7 +13,6 @@ import type {
 } from "../../../types";
 import { qrMatrix } from "../../../utils/qr";
 import { downloadVCard } from "../lib/vcard";
-import { api } from "../../../lib/api";
 import "./Fiche.css";
 
 /*
@@ -263,6 +264,107 @@ function Section({ tab, fiche, open, onToggle }: SectionProps) {
   );
 }
 
+/* ───────── Vidéos de la fiche ───────── */
+type VideoSource =
+  | { kind: "embed"; src: string; vertical?: boolean }
+  | { kind: "file"; src: string }
+  | { kind: "link"; src: string };
+
+/** Reconnaît YouTube / Vimeo / TikTok (lecteur intégré), les fichiers vidéo directs, sinon un simple lien. */
+export function videoSourceOf(raw: string): VideoSource | null {
+  const url = raw.trim();
+  let u: URL;
+  try {
+    u = new URL(url);
+  } catch {
+    return null;
+  }
+  if (u.protocol !== "https:" && u.protocol !== "http:") return null; // jamais javascript: / data:
+  const host = u.hostname.replace(/^www\.|^m\./, "");
+  const seg = u.pathname.split("/").filter(Boolean);
+
+  let yt: string | null = null;
+  if (host === "youtu.be") yt = seg[0] ?? null;
+  else if (host === "youtube.com" || host === "youtube-nocookie.com") {
+    if (u.pathname === "/watch") yt = u.searchParams.get("v");
+    else if (["shorts", "embed", "live"].includes(seg[0])) yt = seg[1] ?? null;
+  }
+  if (yt && /^[\w-]{6,20}$/.test(yt))
+    return {
+      kind: "embed",
+      src: `https://www.youtube-nocookie.com/embed/${yt}`,
+      vertical: seg[0] === "shorts",
+    };
+
+  if (host === "vimeo.com") {
+    const id = seg.find(x => /^\d+$/.test(x));
+    if (id)
+      return { kind: "embed", src: `https://player.vimeo.com/video/${id}` };
+  }
+  if (
+    host === "player.vimeo.com" &&
+    seg[0] === "video" &&
+    /^\d+$/.test(seg[1] ?? "")
+  )
+    return { kind: "embed", src: url };
+
+  if (host === "tiktok.com") {
+    const i = seg.indexOf("video");
+    if (i >= 0 && /^\d+$/.test(seg[i + 1] ?? ""))
+      return {
+        kind: "embed",
+        src: `https://www.tiktok.com/embed/v2/${seg[i + 1]}`,
+        vertical: true,
+      };
+  }
+
+  if (
+    /\.(mp4|webm|mov|m4v)$/i.test(u.pathname) ||
+    u.pathname.includes("/api/media/")
+  )
+    return { kind: "file", src: url };
+  return { kind: "link", src: url };
+}
+
+function VideoItem({ url }: { url: string }) {
+  const [failed, setFailed] = useState(false);
+  const v = videoSourceOf(url);
+  if (!v) return null;
+  if (v.kind === "embed")
+    return (
+      <div className={`f-vid${v.vertical ? " v" : ""}`}>
+        <iframe
+          src={v.src}
+          title="Vidéo"
+          loading="lazy"
+          allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+        />
+      </div>
+    );
+  if (v.kind === "file" && !failed)
+    return (
+      <div className="f-vid">
+        <video
+          src={v.src}
+          controls
+          playsInline
+          preload="metadata"
+          onError={() => setFailed(true)}
+        />
+      </div>
+    );
+  return (
+    <a className="f-vid-link" href={v.src} target="_blank" rel="noreferrer">
+      {failed
+        ? "La vidéo ne peut pas être lue ici — l’ouvrir"
+        : "Voir la vidéo"}
+      <I n="arrow" s={14} />
+    </a>
+  );
+}
+
 function Carousel<T>({
   items,
   render,
@@ -412,16 +514,29 @@ function SectionBody({ tab, fiche }: { tab: Onglet; fiche: FicheRecord }) {
       return (
         <Carousel
           label="Photo"
-          items={(d.galerie || []).slice(0, plan.maxPhotos)}
+          items={(d.galerie || [])
+            .filter(g => g.type !== "video" && g.url)
+            .slice(0, plan.maxPhotos)}
           render={g => <img src={g.url} alt={g.alt || ""} loading="lazy" />}
         />
       );
-    case "videos":
-      return (
+    case "videos": {
+      const vids = (d.galerie || [])
+        .filter(g => g.type === "video" && g.url.trim())
+        .slice(0, plan.maxVideos);
+      return vids.length ? (
+        <div className="f-vids">
+          {vids.map((g, k) => (
+            <VideoItem key={`${g.url}-${k}`} url={g.url} />
+          ))}
+        </div>
+      ) : (
         <p className="f-txt muted">
-          Ajoutez jusqu’à {plan.maxVideos} vidéos (YouTube, TikTok…).
+          Ajoutez jusqu’à {plan.maxVideos} vidéos (YouTube, Vimeo, TikTok ou
+          fichier MP4/WebM).
         </p>
       );
+    }
     case "liens":
       return (
         <div className="f-links">
@@ -435,7 +550,9 @@ function SectionBody({ tab, fiche }: { tab: Onglet; fiche: FicheRecord }) {
       );
     case "rappel":
       return sent ? (
-        <p className="f-ok" role="status">Merci ! Votre demande a bien été envoyée à l’établissement.</p>
+        <p className="f-ok" role="status">
+          Merci ! Votre demande a bien été envoyée à l’établissement.
+        </p>
       ) : (
         <form
           className="f-form"
@@ -447,13 +564,18 @@ function SectionBody({ tab, fiche }: { tab: Onglet; fiche: FicheRecord }) {
             setRappelSubmitting(true);
             setRappelError("");
             try {
-              await api.post(`fiches/public/${encodeURIComponent(fiche.slug)}/rappels`, {
-                nom: String(formData.get("nom") || "").trim(),
-                telephone: String(formData.get("telephone") || "").trim(),
-              });
+              await api.post(
+                `fiches/public/${encodeURIComponent(fiche.slug)}/rappels`,
+                {
+                  nom: String(formData.get("nom") || "").trim(),
+                  telephone: String(formData.get("telephone") || "").trim(),
+                }
+              );
               setSent(true);
             } catch {
-              setRappelError("Impossible d’envoyer la demande. Vérifiez vos coordonnées puis réessayez.");
+              setRappelError(
+                "Impossible d’envoyer la demande. Vérifiez vos coordonnées puis réessayez."
+              );
             } finally {
               setRappelSubmitting(false);
             }
@@ -462,11 +584,35 @@ function SectionBody({ tab, fiche }: { tab: Onglet; fiche: FicheRecord }) {
           <p className="f-txt">
             Laissez vos coordonnées, l’établissement vous rappelle rapidement.
           </p>
-          <input name="nom" required minLength={2} maxLength={100} autoComplete="name" placeholder="Votre nom" />
-          <input name="telephone" required type="tel" minLength={7} maxLength={25} autoComplete="tel" placeholder="Votre téléphone" />
-          {rappelError && <p className="f-error" role="alert">{rappelError}</p>}
-          <button className="f-btn gold" type="submit" disabled={rappelSubmitting}>
-            {rappelSubmitting ? "Envoi en cours…" : "Demander un rappel"} <I n="arrow" s={14} />
+          <input
+            name="nom"
+            required
+            minLength={2}
+            maxLength={100}
+            autoComplete="name"
+            placeholder="Votre nom"
+          />
+          <input
+            name="telephone"
+            required
+            type="tel"
+            minLength={7}
+            maxLength={25}
+            autoComplete="tel"
+            placeholder="Votre téléphone"
+          />
+          {rappelError && (
+            <p className="f-error" role="alert">
+              {rappelError}
+            </p>
+          )}
+          <button
+            className="f-btn gold"
+            type="submit"
+            disabled={rappelSubmitting}
+          >
+            {rappelSubmitting ? "Envoi en cours…" : "Demander un rappel"}{" "}
+            <I n="arrow" s={14} />
           </button>
         </form>
       );
@@ -540,9 +686,11 @@ interface Action {
 export default function Fiche({
   fiche,
   scrollerRef,
-  baseUrl,
+  baseUrl = `${ENV.VITE_BASE_URL}/f/`,
 }: FicheProps) {
-  const publicAppUrl = (import.meta.env.VITE_PUBLIC_APP_URL || window.location.origin).replace(/\/+$/, "");
+  const publicAppUrl = (
+    import.meta.env.VITE_PUBLIC_APP_URL || window.location.origin
+  ).replace(/\/+$/, "");
   const root = useRef<HTMLDivElement>(null);
   const [held, setHeld] = usePullQR(root, scrollerRef);
   const plan = planOf(fiche);
@@ -716,11 +864,7 @@ export default function Fiche({
         <footer className="f-foot">
           <div>
             <span>Mentions légales · Confidentialité</span>
-            <a
-              href={publicAppUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href={publicAppUrl} target="_blank" rel="noreferrer">
               Support Connecté <I n="arrow" s={11} />
             </a>
           </div>
@@ -932,10 +1076,7 @@ function Photos({ photos, alt }: { photos: string[]; alt: string }) {
 }
 
 function BiensBlock({ fiche }: { fiche: FicheRecord }) {
-  const all = (fiche.data.biens || []).slice(
-    0,
-    planOf(fiche).maxBiens || 0
-  );
+  const all = (fiche.data.biens || []).slice(0, planOf(fiche).maxBiens || 0);
   const [f, setF] = useState("tous"),
     [open, setOpen] = useState<Bien | null>(null);
   const list = all.filter(b => f === "tous" || b.type === f);
