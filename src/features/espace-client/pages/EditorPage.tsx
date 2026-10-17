@@ -4,6 +4,7 @@ import Editor from "../components/Editor";
 import Fiche from "../components/Fiche";
 import { useDashboardFiches } from "../hooks/useDashboardFiches";
 import { useFicheEditor } from "../hooks/useFicheEditor";
+import { useUnsavedGuard } from "../hooks/useUnsavedGuard";
 import { MOCK_FICHES, ficheSource } from "../lib/ficheSource";
 import { PLANS } from "../../../lib/plans";
 import type { FicheRecord } from "../../../types";
@@ -72,13 +73,8 @@ function FicheEditor({ id }: { id: string }) {
     document.title = "Modifier ma fiche — Support Connecté";
   }, []);
 
-  // Quitter la page avec des modifications non enregistrées
-  useEffect(() => {
-    if (!dirty) return;
-    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [dirty]);
+  // Quitter la page (fermeture ou lien interne) avec des modifications non enregistrées
+  useUnsavedGuard(dirty);
 
   if (status === "loading")
     return (

@@ -139,6 +139,12 @@ export const PLANS: Record<Formule, Plan> = {
   },
 };
 
+// Droits effectifs d'une fiche : ceux renvoyés par l'API (table plan_limits, modifiable depuis le back-office),
+// avec repli sur PLANS pour les données fictives ou une API qui ne les fournit pas.
+export const planOf = (
+  f: Pick<FicheRecord, "formule" | "planCapabilities">
+): Plan => f.planCapabilities ?? PLANS[f.formule];
+
 // Modèles de page par métier : ordre des blocs + entête conseillé. Appliqués dans les limites de la formule.
 export const TEMPLATES: Record<Secteur, Template> = {
   restaurant: {
@@ -265,10 +271,10 @@ export const defaultTabs = (formule: Formule): Onglet[] =>
 // Applique un modèle de métier sans jamais dépasser la formule
 export function applyTemplate(
   formule: Formule,
-  key: Secteur
+  key: Secteur,
+  plan: Plan = PLANS[formule]
 ): { onglets: Onglet[]; entete: Entete } {
-  const t = TEMPLATES[key],
-    plan = PLANS[formule];
+  const t = TEMPLATES[key];
   let types = t.tabs.filter(x => plan.tabs.includes(x));
   if (!plan.canReorder)
     types = plan.tabs.filter(x => types.includes(x) || plan.tabs.length <= 3);
@@ -291,7 +297,7 @@ export function applyTemplate(
 
 // Onglets réellement affichés (respecte la formule, même si la donnée contient autre chose)
 export function visibleTabs(fiche: FicheRecord): Onglet[] {
-  const plan = PLANS[fiche.formule];
+  const plan = planOf(fiche);
   let tabs = fiche.data.onglets?.length
     ? fiche.data.onglets
     : defaultTabs(fiche.formule);

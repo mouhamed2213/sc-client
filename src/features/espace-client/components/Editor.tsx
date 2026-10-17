@@ -5,10 +5,11 @@ import type {
   PointerEvent as ReactPointerEvent,
   RefObject,
 } from "react";
+import { isAxiosError } from "axios";
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   LAYOUTS,
-  PLANS,
   SIZES,
   TAB_TYPES,
   TEMPLATES,
@@ -16,6 +17,7 @@ import {
   applyTemplate,
   defaultTabs,
   newId,
+  planOf,
 } from "../../../lib/plans";
 import type {
   BienData as Bien,
@@ -34,6 +36,7 @@ import type {
   Taille,
   Theme,
 } from "../../../types";
+import { toFicheError } from "../lib/ficheSource";
 import { uploadFicheMedia } from "../services/media.service";
 import { optimizeImageFile } from "../services/mediaOptimizer";
 import "./Editor.css";
@@ -49,6 +52,7 @@ import { I, QR } from "./Fiche";
   Les images et vidéos sont envoyées au stockage via l'API avant d'être référencées dans la fiche.
   Les URL locales ne sont utilisées que temporairement pour télécharger le QR ou lire les métadonnées vidéo.
 */
+const UPGRADE_PATH = "/espace-client/abonnements";
 const Lock = ({
   to = "Signature",
   children,
@@ -59,17 +63,23 @@ const Lock = ({
   <div className="ed-lock">
     <I n="star" s={14} />
     <span>{children}</span>
-    <a href="#upgrade">Passer en {to}</a>
+    <Link to={UPGRADE_PATH}>Passer en {to}</Link>
   </div>
 );
 const toURL = (f: Blob) => URL.createObjectURL(f);
 
 /** Upload helper shared by Editor and ContentEditor (separate component scope). */
 async function uploadMedia(ficheId: number, file: File) {
-  const prepared = file.type.startsWith("image/")
-    ? await optimizeImageFile(file)
-    : file;
-  return uploadFicheMedia(ficheId, prepared);
+  try {
+    const prepared = file.type.startsWith("image/")
+      ? await optimizeImageFile(file)
+      : file;
+    return await uploadFicheMedia(ficheId, prepared);
+  } catch (error) {
+    // Sans ça, l'utilisateur lirait « Request failed with status code 403 » au lieu du message du serveur
+    // (formule sans vidéos, fichier trop lourd, fiche suspendue…). Les erreurs locales gardent leur texte.
+    throw isAxiosError(error) ? toFicheError(error) : error;
+  }
 }
 
 type DragPayload =
@@ -151,7 +161,7 @@ export default function Editor({
   fiche: FicheRecord;
   onChange: (f: FicheRecord) => void;
 }) {
-  const plan = PLANS[fiche.formule],
+  const plan = planOf(fiche),
     sig = fiche.formule === "signature";
   const [sel, setSel] = useState<string | null>(null),
     [undo, setUndo] = useState<Partial<FicheData> | null>(null);
@@ -164,7 +174,7 @@ export default function Editor({
     onChange({ ...latest.current, data: { ...latest.current.data, ...patch } });
   const tabsOf = (f: FicheRecord) =>
     (f.data.onglets?.length ? f.data.onglets : defaultTabs(f.formule)).filter(
-      t => PLANS[f.formule].tabs.includes(t.type)
+      t => planOf(f).tabs.includes(t.type)
     );
   const tabs = tabsOf(fiche);
   const setTabs = (t: Onglet[]) => upD({ onglets: t });
@@ -229,7 +239,7 @@ export default function Editor({
       entete: fiche.data.entete,
       secteur: fiche.data.secteur,
     });
-    const r = applyTemplate(fiche.formule, key);
+    const r = applyTemplate(fiche.formule, key, plan);
     upD({
       secteur: key,
       onglets: r.onglets,
@@ -271,9 +281,9 @@ export default function Editor({
           </b>
         </div>
         {!sig && (
-          <a href="#upgrade" className="ed-up">
+          <Link to={UPGRADE_PATH} className="ed-up">
             Découvrir la Signature <I n="arrow" s={13} />
-          </a>
+          </Link>
         )}
       </div>
 
@@ -552,7 +562,7 @@ export default function Editor({
               accept="image/jpeg,image/png,image/webp"
               onChange={file(u => up({ logo: u }))}
             />
-9            {fiche.logo ? <img src={fiche.logo} alt="" /> : <I n="image" />}
+            {fiche.logo ? <img src={fiche.logo} alt="" /> : <I n="image" />}
             <span>Logo</span>
           </label>
         </div>
@@ -1528,11 +1538,7 @@ function ContentEditor({
                         const added: string[] = [];
                         try {
                           for (const f of files) {
-                            const prepared = await optimizeImageFile(f);
-                            const uploaded = await uploadFicheMedia(
-                              fiche.id,
-                              prepared
-                            );
+                            const uploaded = await uploadMedia(fiche.id, f);
                             added.push(uploaded.url);
                           }
                           if (added.length) {

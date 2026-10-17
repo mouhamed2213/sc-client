@@ -1,7 +1,7 @@
 import type { Dispatch, ReactNode, RefObject, SetStateAction } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cssVars } from "../../../lib/css";
-import { PLANS, TAB_TYPES, visibleTabs } from "../../../lib/plans";
+import { TAB_TYPES, planOf, visibleTabs } from "../../../lib/plans";
 import type {
   BienData as Bien,
   EnteteComplete,
@@ -313,7 +313,7 @@ function Carousel<T>({
 
 function SectionBody({ tab, fiche }: { tab: Onglet; fiche: FicheRecord }) {
   const d = fiche.data,
-    plan = PLANS[fiche.formule];
+    plan = planOf(fiche);
   const [sent, setSent] = useState(false);
   const [rappelSubmitting, setRappelSubmitting] = useState(false);
   const [rappelError, setRappelError] = useState("");
@@ -544,7 +544,7 @@ export default function Fiche({
 }: FicheProps) {
   const root = useRef<HTMLDivElement>(null);
   const [held, setHeld] = usePullQR(root, scrollerRef);
-  const plan = PLANS[fiche.formule];
+  const plan = planOf(fiche);
   const e: EnteteComplete = {
     disposition: "portrait",
     taille: "m",
@@ -933,7 +933,7 @@ function Photos({ photos, alt }: { photos: string[]; alt: string }) {
 function BiensBlock({ fiche }: { fiche: FicheRecord }) {
   const all = (fiche.data.biens || []).slice(
     0,
-    PLANS[fiche.formule].maxBiens || 0
+    planOf(fiche).maxBiens || 0
   );
   const [f, setF] = useState("tous"),
     [open, setOpen] = useState<Bien | null>(null);

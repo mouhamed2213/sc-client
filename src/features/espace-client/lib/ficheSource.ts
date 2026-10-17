@@ -174,6 +174,7 @@ export function toFicheError(e: unknown): FicheError {
   if (status === 401) return new FicheError("Votre session a expiré. Reconnectez-vous pour continuer.", "auth", err?.code);
   if (status === 403) return new FicheError(msg ?? "Modification non autorisée.", "forbidden", err?.code);
   if (status === 404) return new FicheError("Fiche introuvable.", "notfound", err?.code);
+  if (status === 413) return new FicheError("Ce fichier est trop volumineux.", "upload", err?.code);
   if (status === 429) return new FicheError("Trop de requêtes. Patientez un instant puis réessayez.", "rate", err?.code);
   if (status === 400) return new FicheError("Certaines informations sont invalides.", "invalid", err?.code, issues);
   if (status === 422) return new FicheError(msg ?? "Cette modification dépasse les droits de la formule.", "limits", err?.code, issues);
