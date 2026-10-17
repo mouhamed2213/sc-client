@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import type {
   ChangeEvent,
   KeyboardEvent as ReactKeyboardEvent,
@@ -5,9 +6,9 @@ import type {
   PointerEvent as ReactPointerEvent,
   RefObject,
 } from "react";
-import { isAxiosError } from "axios";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { ENV } from "../../../lib/env";
 import {
   LAYOUTS,
   SIZES,
@@ -71,29 +72,31 @@ const toURL = (f: Blob) => URL.createObjectURL(f);
 /** Message lisible pour un échec d'upload : on garde le texte du serveur quel que soit le statut (403, 422, 503…). */
 function uploadErrorMessage(error: unknown): string {
   if (!isAxiosError(error)) {
-    return error instanceof Error ? error.message : "Échec de l'envoi du média.";
+    return error instanceof Error
+      ? error.message
+      : "Échec de l'envoi du média.";
   }
   if (!error.response) {
     return "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.";
   }
   const { status, data } = error.response;
-  const apiError = (data as { error?: { code?: string; message?: string } } | undefined)?.error;
+  const apiError = (
+    data as { error?: { code?: string; message?: string } } | undefined
+  )?.error;
   // Route absente (API pas à jour) : ne pas la présenter comme « Fiche introuvable ».
   if (status === 404 && apiError?.code === "ROUTE_INTROUVABLE") {
     return "Le serveur ne propose pas l'envoi de médias : mettez l'API à jour.";
   }
-  if (status === 401) return "Votre session a expiré. Reconnectez-vous pour continuer.";
+  if (status === 401)
+    return "Votre session a expiré. Reconnectez-vous pour continuer.";
   if (status === 413) return "Ce fichier est trop volumineux.";
-  if (status === 429) return "Trop de requêtes. Patientez un instant puis réessayez.";
+  if (status === 429)
+    return "Trop de requêtes. Patientez un instant puis réessayez.";
   return apiError?.message ?? toFicheError(error).message;
 }
 
 /** Upload helper shared by Editor and ContentEditor (separate component scope). */
-async function uploadMedia(
-  ficheId: number,
-  file: File,
-  purpose?: "menu"
-) {
+async function uploadMedia(ficheId: number, file: File, purpose?: "menu") {
   try {
     const prepared = file.type.startsWith("image/")
       ? await optimizeImageFile(file)
@@ -317,7 +320,7 @@ export default function Editor({
         <div className="ed-qr">
           <div className="ed-qr-v" id="ed-qr-svg">
             <QR
-              text={`https://supportconnecte.com/f/${fiche.slug}`}
+              text={`${ENV.VITE_BASE_URL}/f/${fiche.slug}`}
               logo={fiche.logo}
               size={132}
             />
@@ -347,7 +350,7 @@ export default function Editor({
             </button>
             <a
               className="ed-up"
-              href={`https://supportconnecte.com/contact?sujet=qr#formulaire`}
+              href={`${ENV.VITE_BASE_URL}/contact?sujet=qr#formulaire`}
               target="_blank"
               rel="noreferrer"
             >
@@ -1379,7 +1382,9 @@ function ContentEditor({
           };
           v.onerror = () => {
             URL.revokeObjectURL(localUrl);
-            setErr("Impossible de lire cette vidéo. Essayez un autre fichier MP4 ou WebM.");
+            setErr(
+              "Impossible de lire cette vidéo. Essayez un autre fichier MP4 ou WebM."
+            );
           };
           v.src = localUrl;
         };
@@ -1475,7 +1480,10 @@ function ContentEditor({
                       setM(
                         M.map((x, j) =>
                           j === si
-                            ? { ...x, plats: x.plats.filter((_, k) => k !== pi) }
+                            ? {
+                                ...x,
+                                plats: x.plats.filter((_, k) => k !== pi),
+                              }
                             : x
                         )
                       )
