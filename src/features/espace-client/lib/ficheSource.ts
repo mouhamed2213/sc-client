@@ -109,6 +109,7 @@ function hasLocalMediaReference(value: unknown): boolean {
 }
 
 import { toFicheRecord, type ApiFicheDetail } from "./ficheDto";
+import { planOf } from "../../../lib/plans";
 import { buildUpdatePayload, labelForChamp } from "./fichePayload";
 
 /**
@@ -147,7 +148,7 @@ export interface FieldIssue {
 export class FicheError extends Error {
   constructor(
     message: string,
-    readonly kind: "network" | "auth" | "forbidden" | "notfound" | "invalid" | "limits" | "upload" | "rate" | "server",
+    readonly kind: "network" | "auth" | "forbidden" | "notfound" | "invalid" | "limits" | "upload" | "rate" | "conflict" | "server",
     readonly code?: string,
     readonly issues: FieldIssue[] = []
   ) {
@@ -174,6 +175,9 @@ export function toFicheError(e: unknown): FicheError {
   if (status === 401) return new FicheError("Votre session a expiré. Reconnectez-vous pour continuer.", "auth", err?.code);
   if (status === 403) return new FicheError(msg ?? "Modification non autorisée.", "forbidden", err?.code);
   if (status === 404) return new FicheError("Fiche introuvable.", "notfound", err?.code);
+  if (status === 409 && err?.code === "CONFLIT_VERSION")
+    return new FicheError(msg ?? "Cette fiche a été modifiée ailleurs. Rechargez-la avant d'enregistrer.", "conflict", err.code);
+  if (status === 413) return new FicheError("Ce fichier est trop volumineux.", "upload", err?.code);
   if (status === 429) return new FicheError("Trop de requêtes. Patientez un instant puis réessayez.", "rate", err?.code);
   if (status === 400) return new FicheError("Certaines informations sont invalides.", "invalid", err?.code, issues);
   if (status === 422) return new FicheError(msg ?? "Cette modification dépasse les droits de la formule.", "limits", err?.code, issues);
@@ -197,7 +201,7 @@ export const apiSource: FicheSource = {
   },
 
   async save(draft, previous) {
-    const { payload: originalPayload, skipped, pendingUploads } = buildUpdatePayload(previous, draft);
+    const { payload: originalPayload, skipped, ignored, pendingUploads } = buildUpdatePayload(previous, draft, planOf(draft));
     if (!originalPayload) return { fiche: previous, notes: [] };
 
     try {
@@ -215,7 +219,10 @@ export const apiSource: FicheSource = {
       }
 
       const res = await api.patch<{ fiche: ApiFicheDetail }>(`fiches/${draft.id}`, payload);
-      const notes = skipped.length ? [`Ignoré car incomplet : ${skipped.join(", ")}.`] : [];
+      const notes = [
+        ...(skipped.length ? [`Ignoré car incomplet : ${skipped.join(", ")}.`] : []),
+        ...(ignored.length ? [`Non enregistré (non inclus dans votre formule) : ${ignored.join(", ")}.`] : []),
+      ];
       return { fiche: toFicheRecord(res.data.fiche), notes };
     } catch (e) {
       throw toFicheError(e);

@@ -506,6 +506,8 @@ export interface FicheRecord {
   googlePlaceId: string;
   dateEcheance: string | null;
   scansTotal: number;
+  /** Version de la fiche renvoyée par l'API ; renvoyée au PATCH pour détecter une modification concurrente. */
+  updatedAt?: string;
   data: FicheData;
 }
 

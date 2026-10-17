@@ -57,11 +57,14 @@ export function useFicheEditor(key: string) {
     setSaving(true);
     setSaveError(null);
     setNotes([]);
+    const sentJson = JSON.stringify(draft);
     try {
       const { fiche, notes } = await ficheSource.save(draft, saved.current);
       saved.current = fiche;
       savedJson.current = JSON.stringify(fiche);
-      setDraft(fiche);
+      // On adopte la version du serveur seulement si rien n'a été tapé pendant l'envoi ;
+      // sinon on garde le brouillon courant (il reste « non enregistré ») au lieu d'écraser la saisie.
+      setDraft(current => (current && JSON.stringify(current) !== sentJson ? current : fiche));
       setNotes(notes);
       // Le tableau de bord et l'aperçu doivent refléter la modification
       void queryClient.invalidateQueries({ queryKey: dashboardFichesKey });

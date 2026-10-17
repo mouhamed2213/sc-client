@@ -5,10 +5,11 @@ import type {
   PointerEvent as ReactPointerEvent,
   RefObject,
 } from "react";
+import { isAxiosError } from "axios";
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   LAYOUTS,
-  PLANS,
   SIZES,
   TAB_TYPES,
   TEMPLATES,
@@ -16,6 +17,7 @@ import {
   applyTemplate,
   defaultTabs,
   newId,
+  planOf,
 } from "../../../lib/plans";
 import type {
   BienData as Bien,
@@ -34,6 +36,7 @@ import type {
   Taille,
   Theme,
 } from "../../../types";
+import { toFicheError } from "../lib/ficheSource";
 import { uploadFicheMedia } from "../services/media.service";
 import { optimizeImageFile } from "../services/mediaOptimizer";
 import "./Editor.css";
@@ -49,6 +52,7 @@ import { I, QR } from "./Fiche";
   Les images et vidéos sont envoyées au stockage via l'API avant d'être référencées dans la fiche.
   Les URL locales ne sont utilisées que temporairement pour télécharger le QR ou lire les métadonnées vidéo.
 */
+const UPGRADE_PATH = "/espace-client/abonnements";
 const Lock = ({
   to = "Signature",
   children,
@@ -59,17 +63,46 @@ const Lock = ({
   <div className="ed-lock">
     <I n="star" s={14} />
     <span>{children}</span>
-    <a href="#upgrade">Passer en {to}</a>
+    <Link to={UPGRADE_PATH}>Passer en {to}</Link>
   </div>
 );
 const toURL = (f: Blob) => URL.createObjectURL(f);
 
+/** Message lisible pour un échec d'upload : on garde le texte du serveur quel que soit le statut (403, 422, 503…). */
+function uploadErrorMessage(error: unknown): string {
+  if (!isAxiosError(error)) {
+    return error instanceof Error ? error.message : "Échec de l'envoi du média.";
+  }
+  if (!error.response) {
+    return "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.";
+  }
+  const { status, data } = error.response;
+  const apiError = (data as { error?: { code?: string; message?: string } } | undefined)?.error;
+  // Route absente (API pas à jour) : ne pas la présenter comme « Fiche introuvable ».
+  if (status === 404 && apiError?.code === "ROUTE_INTROUVABLE") {
+    return "Le serveur ne propose pas l'envoi de médias : mettez l'API à jour.";
+  }
+  if (status === 401) return "Votre session a expiré. Reconnectez-vous pour continuer.";
+  if (status === 413) return "Ce fichier est trop volumineux.";
+  if (status === 429) return "Trop de requêtes. Patientez un instant puis réessayez.";
+  return apiError?.message ?? toFicheError(error).message;
+}
+
 /** Upload helper shared by Editor and ContentEditor (separate component scope). */
-async function uploadMedia(ficheId: number, file: File) {
-  const prepared = file.type.startsWith("image/")
-    ? await optimizeImageFile(file)
-    : file;
-  return uploadFicheMedia(ficheId, prepared);
+async function uploadMedia(
+  ficheId: number,
+  file: File,
+  purpose?: "menu"
+) {
+  try {
+    const prepared = file.type.startsWith("image/")
+      ? await optimizeImageFile(file)
+      : file;
+    return await uploadFicheMedia(ficheId, prepared, purpose);
+  } catch (error) {
+    // Les erreurs locales (format, compression) gardent leur texte ; celles du serveur gardent le leur.
+    throw new Error(uploadErrorMessage(error));
+  }
 }
 
 type DragPayload =
@@ -151,7 +184,7 @@ export default function Editor({
   fiche: FicheRecord;
   onChange: (f: FicheRecord) => void;
 }) {
-  const plan = PLANS[fiche.formule],
+  const plan = planOf(fiche),
     sig = fiche.formule === "signature";
   const [sel, setSel] = useState<string | null>(null),
     [undo, setUndo] = useState<Partial<FicheData> | null>(null);
@@ -164,7 +197,7 @@ export default function Editor({
     onChange({ ...latest.current, data: { ...latest.current.data, ...patch } });
   const tabsOf = (f: FicheRecord) =>
     (f.data.onglets?.length ? f.data.onglets : defaultTabs(f.formule)).filter(
-      t => PLANS[f.formule].tabs.includes(t.type)
+      t => planOf(f).tabs.includes(t.type)
     );
   const tabs = tabsOf(fiche);
   const setTabs = (t: Onglet[]) => upD({ onglets: t });
@@ -229,7 +262,7 @@ export default function Editor({
       entete: fiche.data.entete,
       secteur: fiche.data.secteur,
     });
-    const r = applyTemplate(fiche.formule, key);
+    const r = applyTemplate(fiche.formule, key, plan);
     upD({
       secteur: key,
       onglets: r.onglets,
@@ -271,9 +304,9 @@ export default function Editor({
           </b>
         </div>
         {!sig && (
-          <a href="#upgrade" className="ed-up">
+          <Link to={UPGRADE_PATH} className="ed-up">
             Découvrir la Signature <I n="arrow" s={13} />
-          </a>
+          </Link>
         )}
       </div>
 
@@ -552,7 +585,7 @@ export default function Editor({
               accept="image/jpeg,image/png,image/webp"
               onChange={file(u => up({ logo: u }))}
             />
-            9 {fiche.logo ? <img src={fiche.logo} alt="" /> : <I n="image" />}
+            {fiche.logo ? <img src={fiche.logo} alt="" /> : <I n="image" />}
             <span>Logo</span>
           </label>
         </div>
@@ -1101,7 +1134,14 @@ function ContentEditor({
       const setS = (v: SectionCatalogue[]) => upD({ sections: v });
       return (
         <div className="ed-items">
-          {S.slice(0, plan.maxCatalogSections).map((s, si) => (
+          {S.length > plan.maxCatalogSections! && (
+            <p className="ed-err" role="alert">
+              Votre formule autorise {plan.maxCatalogSections} section(s) :
+              retirez-en {S.length - plan.maxCatalogSections!} pour pouvoir
+              enregistrer.
+            </p>
+          )}
+          {S.map((s, si) => (
             <div key={si} className="ed-sec">
               <input
                 className="ed-sec-t"
@@ -1207,8 +1247,34 @@ function ContentEditor({
                       }
                     />
                   )}
+                  <button
+                    className="ed-del"
+                    type="button"
+                    aria-label={`Retirer l'article ${a.nom || ai + 1}`}
+                    onClick={() =>
+                      setS(
+                        S.map((x, j) =>
+                          j === si
+                            ? {
+                                ...x,
+                                articles: x.articles.filter((_, k) => k !== ai),
+                              }
+                            : x
+                        )
+                      )
+                    }
+                  >
+                    ×
+                  </button>
                 </div>
               ))}
+              {s.articles.length > plan.maxCatalogArticlesPerSection! && (
+                <p className="ed-err" role="alert">
+                  {plan.maxCatalogArticlesPerSection} articles maximum par
+                  section : retirez-en{" "}
+                  {s.articles.length - plan.maxCatalogArticlesPerSection!}.
+                </p>
+              )}
               {s.articles.length < plan.maxCatalogArticlesPerSection! && (
                 <button
                   className="ed-add-b"
@@ -1236,6 +1302,13 @@ function ContentEditor({
                   + Article
                 </button>
               )}
+              <button
+                className="ed-link"
+                type="button"
+                onClick={() => setS(S.filter((_, j) => j !== si))}
+              >
+                Retirer cette section
+              </button>
             </div>
           ))}
           {S.length < plan.maxCatalogSections! && (
@@ -1294,7 +1367,7 @@ function ContentEditor({
             }
             try {
               setErr("");
-              const uploaded = await uploadMedia(fiche.id, f);
+              const uploaded = await uploadMedia(fiche.id, f, "menu");
               setP(si, pi, { video: uploaded.url });
             } catch (error) {
               setErr(
@@ -1305,6 +1378,10 @@ function ContentEditor({
             } finally {
               URL.revokeObjectURL(localUrl);
             }
+          };
+          v.onerror = () => {
+            URL.revokeObjectURL(localUrl);
+            setErr("Impossible de lire cette vidéo. Essayez un autre fichier MP4 ou WebM.");
           };
           v.src = localUrl;
         };
@@ -1392,8 +1469,30 @@ function ContentEditor({
                         : `Ajouter une vidéo courte (${plan.maxMenuVideoSeconds} s max, verticale)`}
                     </label>
                   </div>
+                  <button
+                    className="ed-del"
+                    type="button"
+                    aria-label={`Retirer le plat ${p.nom || pi + 1}`}
+                    onClick={() =>
+                      setM(
+                        M.map((x, j) =>
+                          j === si
+                            ? { ...x, plats: x.plats.filter((_, k) => k !== pi) }
+                            : x
+                        )
+                      )
+                    }
+                  >
+                    ×
+                  </button>
                 </div>
               ))}
+              {s.plats.length > plan.maxMenuItemsPerSection! && (
+                <p className="ed-err" role="alert">
+                  {plan.maxMenuItemsPerSection} plats maximum par section :
+                  retirez-en {s.plats.length - plan.maxMenuItemsPerSection!}.
+                </p>
+              )}
               {s.plats.length < plan.maxMenuItemsPerSection! && (
                 <button
                   className="ed-add-b"
@@ -1416,6 +1515,13 @@ function ContentEditor({
                   + Plat
                 </button>
               )}
+              <button
+                className="ed-link"
+                type="button"
+                onClick={() => setM(M.filter((_, j) => j !== si))}
+              >
+                Retirer cette section
+              </button>
             </div>
           ))}
           {err && (
@@ -1530,11 +1636,7 @@ function ContentEditor({
                         const added: string[] = [];
                         try {
                           for (const f of files) {
-                            const prepared = await optimizeImageFile(f);
-                            const uploaded = await uploadFicheMedia(
-                              fiche.id,
-                              prepared
-                            );
+                            const uploaded = await uploadMedia(fiche.id, f);
                             added.push(uploaded.url);
                           }
                           if (added.length) {
