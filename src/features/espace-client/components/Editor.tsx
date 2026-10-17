@@ -68,6 +68,26 @@ const Lock = ({
 );
 const toURL = (f: Blob) => URL.createObjectURL(f);
 
+/** Message lisible pour un échec d'upload : on garde le texte du serveur quel que soit le statut (403, 422, 503…). */
+function uploadErrorMessage(error: unknown): string {
+  if (!isAxiosError(error)) {
+    return error instanceof Error ? error.message : "Échec de l'envoi du média.";
+  }
+  if (!error.response) {
+    return "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.";
+  }
+  const { status, data } = error.response;
+  const apiError = (data as { error?: { code?: string; message?: string } } | undefined)?.error;
+  // Route absente (API pas à jour) : ne pas la présenter comme « Fiche introuvable ».
+  if (status === 404 && apiError?.code === "ROUTE_INTROUVABLE") {
+    return "Le serveur ne propose pas l'envoi de médias : mettez l'API à jour.";
+  }
+  if (status === 401) return "Votre session a expiré. Reconnectez-vous pour continuer.";
+  if (status === 413) return "Ce fichier est trop volumineux.";
+  if (status === 429) return "Trop de requêtes. Patientez un instant puis réessayez.";
+  return apiError?.message ?? toFicheError(error).message;
+}
+
 /** Upload helper shared by Editor and ContentEditor (separate component scope). */
 async function uploadMedia(
   ficheId: number,
@@ -80,9 +100,8 @@ async function uploadMedia(
       : file;
     return await uploadFicheMedia(ficheId, prepared, purpose);
   } catch (error) {
-    // Sans ça, l'utilisateur lirait « Request failed with status code 403 » au lieu du message du serveur
-    // (formule sans vidéos, fichier trop lourd, fiche suspendue…). Les erreurs locales gardent leur texte.
-    throw isAxiosError(error) ? toFicheError(error) : error;
+    // Les erreurs locales (format, compression) gardent leur texte ; celles du serveur gardent le leur.
+    throw new Error(uploadErrorMessage(error));
   }
 }
 
@@ -1357,6 +1376,10 @@ function ContentEditor({
             } finally {
               URL.revokeObjectURL(localUrl);
             }
+          };
+          v.onerror = () => {
+            URL.revokeObjectURL(localUrl);
+            setErr("Impossible de lire cette vidéo. Essayez un autre fichier MP4 ou WebM.");
           };
           v.src = localUrl;
         };
