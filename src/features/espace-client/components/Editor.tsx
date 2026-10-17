@@ -552,7 +552,7 @@ export default function Editor({
               accept="image/jpeg,image/png,image/webp"
               onChange={file(u => up({ logo: u }))}
             />
-9            {fiche.logo ? <img src={fiche.logo} alt="" /> : <I n="image" />}
+            9 {fiche.logo ? <img src={fiche.logo} alt="" /> : <I n="image" />}
             <span>Logo</span>
           </label>
         </div>
@@ -652,6 +652,8 @@ const EDITABLE: TabType[] = [
   "reseaux",
   "localisation",
 ];
+
+// fdsfds
 
 interface ContentEditorProps {
   tab: Onglet;
