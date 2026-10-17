@@ -69,12 +69,16 @@ const Lock = ({
 const toURL = (f: Blob) => URL.createObjectURL(f);
 
 /** Upload helper shared by Editor and ContentEditor (separate component scope). */
-async function uploadMedia(ficheId: number, file: File) {
+async function uploadMedia(
+  ficheId: number,
+  file: File,
+  purpose?: "menu"
+) {
   try {
     const prepared = file.type.startsWith("image/")
       ? await optimizeImageFile(file)
       : file;
-    return await uploadFicheMedia(ficheId, prepared);
+    return await uploadFicheMedia(ficheId, prepared, purpose);
   } catch (error) {
     // Sans ça, l'utilisateur lirait « Request failed with status code 403 » au lieu du message du serveur
     // (formule sans vidéos, fichier trop lourd, fiche suspendue…). Les erreurs locales gardent leur texte.
@@ -1109,7 +1113,14 @@ function ContentEditor({
       const setS = (v: SectionCatalogue[]) => upD({ sections: v });
       return (
         <div className="ed-items">
-          {S.slice(0, plan.maxCatalogSections).map((s, si) => (
+          {S.length > plan.maxCatalogSections! && (
+            <p className="ed-err" role="alert">
+              Votre formule autorise {plan.maxCatalogSections} section(s) :
+              retirez-en {S.length - plan.maxCatalogSections!} pour pouvoir
+              enregistrer.
+            </p>
+          )}
+          {S.map((s, si) => (
             <div key={si} className="ed-sec">
               <input
                 className="ed-sec-t"
@@ -1215,8 +1226,34 @@ function ContentEditor({
                       }
                     />
                   )}
+                  <button
+                    className="ed-del"
+                    type="button"
+                    aria-label={`Retirer l'article ${a.nom || ai + 1}`}
+                    onClick={() =>
+                      setS(
+                        S.map((x, j) =>
+                          j === si
+                            ? {
+                                ...x,
+                                articles: x.articles.filter((_, k) => k !== ai),
+                              }
+                            : x
+                        )
+                      )
+                    }
+                  >
+                    ×
+                  </button>
                 </div>
               ))}
+              {s.articles.length > plan.maxCatalogArticlesPerSection! && (
+                <p className="ed-err" role="alert">
+                  {plan.maxCatalogArticlesPerSection} articles maximum par
+                  section : retirez-en{" "}
+                  {s.articles.length - plan.maxCatalogArticlesPerSection!}.
+                </p>
+              )}
               {s.articles.length < plan.maxCatalogArticlesPerSection! && (
                 <button
                   className="ed-add-b"
@@ -1244,6 +1281,13 @@ function ContentEditor({
                   + Article
                 </button>
               )}
+              <button
+                className="ed-link"
+                type="button"
+                onClick={() => setS(S.filter((_, j) => j !== si))}
+              >
+                Retirer cette section
+              </button>
             </div>
           ))}
           {S.length < plan.maxCatalogSections! && (
@@ -1302,7 +1346,7 @@ function ContentEditor({
             }
             try {
               setErr("");
-              const uploaded = await uploadMedia(fiche.id, f);
+              const uploaded = await uploadMedia(fiche.id, f, "menu");
               setP(si, pi, { video: uploaded.url });
             } catch (error) {
               setErr(
@@ -1400,8 +1444,30 @@ function ContentEditor({
                         : `Ajouter une vidéo courte (${plan.maxMenuVideoSeconds} s max, verticale)`}
                     </label>
                   </div>
+                  <button
+                    className="ed-del"
+                    type="button"
+                    aria-label={`Retirer le plat ${p.nom || pi + 1}`}
+                    onClick={() =>
+                      setM(
+                        M.map((x, j) =>
+                          j === si
+                            ? { ...x, plats: x.plats.filter((_, k) => k !== pi) }
+                            : x
+                        )
+                      )
+                    }
+                  >
+                    ×
+                  </button>
                 </div>
               ))}
+              {s.plats.length > plan.maxMenuItemsPerSection! && (
+                <p className="ed-err" role="alert">
+                  {plan.maxMenuItemsPerSection} plats maximum par section :
+                  retirez-en {s.plats.length - plan.maxMenuItemsPerSection!}.
+                </p>
+              )}
               {s.plats.length < plan.maxMenuItemsPerSection! && (
                 <button
                   className="ed-add-b"
@@ -1424,6 +1490,13 @@ function ContentEditor({
                   + Plat
                 </button>
               )}
+              <button
+                className="ed-link"
+                type="button"
+                onClick={() => setM(M.filter((_, j) => j !== si))}
+              >
+                Retirer cette section
+              </button>
             </div>
           ))}
           {err && (

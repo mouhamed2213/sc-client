@@ -166,6 +166,14 @@ function FicheEditor({ id }: { id: string }) {
           {saveError && (
             <div className="edp-note edp-warn" role="alert">
               <strong>{saveError.message}</strong>
+              {saveError.kind === "conflict" && (
+                <>
+                  {" "}
+                  <button onClick={retry}>
+                    Recharger la fiche (mes modifications non enregistrées seront perdues)
+                  </button>
+                </>
+              )}
               {saveError.issues.length > 0 && (
                 <ul className="edp-errors">
                   {saveError.issues.slice(0, 8).map((i, n) => (

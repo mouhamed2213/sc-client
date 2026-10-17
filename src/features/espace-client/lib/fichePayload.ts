@@ -1,4 +1,4 @@
-import type { FicheRecord } from "../../../types";
+import type { FicheRecord, Plan } from "../../../types";
 
 /*
   Construit le corps de PATCH /api/fiches/:id à partir du brouillon de l'éditeur.
@@ -52,6 +52,8 @@ export interface PayloadResult {
   payload: Json | null;
   /** Lignes incomplètes retirées de la requête (pour en informer l'utilisateur). */
   skipped: string[];
+  /** Données conservées en base mais non envoyées car la formule actuelle ne les permet plus (ex. prix après rétrogradation). */
+  ignored: string[];
   /** Zones contenant encore une URL de prévisualisation locale blob: / data:. */
   pendingUploads: string[];
 }
@@ -68,8 +70,12 @@ const opt = (o: Json, k: string, v: unknown) => {
   return o;
 };
 
-export function buildUpdatePayload(previous: FicheRecord, draft: FicheRecord): PayloadResult {
+export function buildUpdatePayload(previous: FicheRecord, draft: FicheRecord, plan?: Plan): PayloadResult {
   const skipped: string[] = [];
+  const ignored: string[] = [];
+  // Le serveur refuse (422) tout prix reçu si la formule n'en autorise pas : une fiche rétrogradée de Signature
+  // à Pro ne pourrait plus jamais enregistrer son catalogue. On n'envoie donc pas ces prix et on le signale.
+  const keepPrices = plan?.catalogPrices ?? true;
   const skip = (n: number, one: string, many: string) => {
     if (n > 0) skipped.push(n === 1 ? `1 ${one}` : `${n} ${many}`);
   };
@@ -111,7 +117,8 @@ export function buildUpdatePayload(previous: FicheRecord, draft: FicheRecord): P
               const o: Json = { nom: str(a.nom) };
               opt(o, "description", str(a.description));
               opt(o, "photo", str(a.photo));
-              opt(o, "prix", digits(a.prix));
+              if (keepPrices) opt(o, "prix", digits(a.prix));
+              else if (digits(a.prix) !== undefined && !ignored.includes("prix du catalogue")) ignored.push("prix du catalogue");
               opt(o, "badge", str(a.badge));
               return o;
             }),
@@ -188,9 +195,13 @@ export function buildUpdatePayload(previous: FicheRecord, draft: FicheRecord): P
   }
   if (Object.keys(data).length) payload.data = data;
 
+  // Version vue au chargement : le serveur refuse (409) si la fiche a changé entre-temps (autre onglet, autre appareil).
+  if (Object.keys(payload).length && previous.updatedAt) payload.baseUpdatedAt = previous.updatedAt;
+
   return {
     payload: Object.keys(payload).length ? payload : null,
     skipped,
+    ignored,
     pendingUploads: findPendingUploads(payload),
   };
 }

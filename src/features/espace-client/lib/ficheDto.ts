@@ -22,6 +22,7 @@ export type ApiFicheDetail = {
   googlePlaceId: string;
   dateEcheance: string | null;
   scansTotal: number;
+  updatedAt?: string;
   data: {
     [key: string]: unknown;
     galerie?: { type: string; url: string; alt?: string }[];
@@ -56,6 +57,7 @@ export function toFicheRecord(dto: ApiFicheDetail): FicheRecord {
     googlePlaceId: dto.googlePlaceId ?? "",
     dateEcheance: dto.dateEcheance,
     scansTotal: dto.scansTotal,
+    updatedAt: dto.updatedAt,
     data: {
       secteur: data.secteur as FicheRecord["data"]["secteur"],
       premierBouton: data.premierBouton as string | undefined,
