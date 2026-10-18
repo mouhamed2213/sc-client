@@ -62,7 +62,7 @@ export function usePullQR(
         root.classList.remove("rel");
         set(Math.min(300, pull + -e.deltaY * 0.35));
         clearTimeout(timer);
-        timer = setTimeout(release, 380);
+        timer = window.setTimeout(release, 380);
       }
     };
     const el = sc || window;

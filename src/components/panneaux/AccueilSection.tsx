@@ -17,7 +17,7 @@ export default function AccueilSection() {
     const io = new IntersectionObserver(([e]) => {
       clearInterval(id);
       if (e.isIntersecting && !window.matchMedia('(prefers-reduced-motion: reduce)').matches)
-        id = setInterval(() => { if (user.current) return clearInterval(id); setCur((c) => (c + 1) % S.length); }, 2600);
+        id = window.setInterval(() => { if (user.current) return clearInterval(id); setCur((c) => (c + 1) % S.length); }, 2600);
     }, { threshold: .45 });
     io.observe(box.current!);
     return () => { io.disconnect(); clearInterval(id); };

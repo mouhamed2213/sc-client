@@ -31,7 +31,7 @@ export default function LiveUpdate() {
     const io = new IntersectionObserver(([e]) => {
       clearInterval(id);
       if (e.isIntersecting && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        id = setInterval(() => { if (user.current) return clearInterval(id); apply(LIVE.changes[cursor.current++ % LIVE.changes.length]); }, 2800);
+        id = window.setInterval(() => { if (user.current) return clearInterval(id); apply(LIVE.changes[cursor.current++ % LIVE.changes.length]); }, 2800);
       }
     }, { threshold: .5 });
     io.observe(el);
