@@ -558,7 +558,6 @@ export interface Template {
   entete: { disposition: Disposition; taille: Taille };
 }
 
-
 export type PaymentMethod = "WAVE" | "ORANGE_MONEY";
 export const FORMULES: {
   id: PlanType;

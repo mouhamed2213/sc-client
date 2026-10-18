@@ -716,17 +716,18 @@ function ContentEditor({
   switch (tab.type) {
     case "presentation":
       return (
-        <label className="ed-area">
-          <textarea
-            rows={4}
-            maxLength={plan.maxPresentation}
-            value={d.presentation || ""}
-            onChange={ev => upD({ presentation: ev.target.value })}
-          />
-          <small>
-            {(d.presentation || "").length} / {plan.maxPresentation}
-          </small>
-        </label>
+<label className="ed-area">
+  <textarea
+    rows={4}
+    className="w-full resize-y break-words text-sm"
+    maxLength={plan.maxPresentation}
+    value={d.presentation || ""}
+    onChange={ev => upD({ presentation: ev.target.value })}
+  />
+  <small>
+    {(d.presentation || "").length} / {plan.maxPresentation}
+  </small>
+</label>
       );
     case "texte":
       return (

@@ -19,7 +19,11 @@ import { VerifyMailPage } from "./features/auth/pages/VerifyMailPage";
 import DashboardPage from "./features/espace-client/pages/DashboardPage";
 
 import ClientLayout from "./features/espace-client/layout/ClientLayout";
+import CallbackRequestsPage from "./features/espace-client/pages/CallbackRequestsPage";
+import { FichePage } from "./features/espace-client/pages/FichePage";
+import PublicFichePage from "./features/espace-client/pages/PublicFichePage";
 import SettingsPage from "./features/espace-client/pages/SettingsPage";
+import SubscriptionPage from "./features/espace-client/pages/SubscriptionPage";
 import AProposPage from "./pages/AProposPage";
 import BrandingPage from "./pages/BrandingPage";
 import CartesPage from "./pages/CartesPage";
@@ -29,15 +33,13 @@ import LegalPage, { LEGAL_PATHS } from "./pages/LegalPage";
 import PanneauxPage from "./pages/PanneauxPage";
 import QrSmartPage from "./pages/QrSmartPage";
 import SecteursPage from "./pages/SecteursPage";
-import { FichePage } from "./features/espace-client/pages/FichePage";
-import CallbackRequestsPage from "./features/espace-client/pages/CallbackRequestsPage";
-import PublicFichePage from "./features/espace-client/pages/PublicFichePage";
-import SubscriptionPage from "./features/espace-client/pages/SubscriptionPage";
 
 // Pages chargées à la demande
 const ContenuPage = lazy(() => import("./pages/ContenuPage"));
 const ImmobilierPage = lazy(() => import("./pages/ImmobilierPage"));
-const EditorPage = lazy(() => import("./features/espace-client/pages/EditorPage"));
+const EditorPage = lazy(
+  () => import("./features/espace-client/pages/EditorPage")
+);
 
 const SECTOR_IDS: string[] = SECTORS.map(x => x.id);
 
@@ -64,7 +66,7 @@ function PublicLayout() {
     <>
       <Header current="" />
       <Outlet />
-      <Footer current="" />
+      {/* <Footer current="" /> */}
     </>
   );
 }
