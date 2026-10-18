@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { toFicheError } from "../../lib/ficheSource";
 import { uploadFicheMedia } from "../../services/media.service";
 import { optimizeImageFile } from "../../services/mediaOptimizer";
-import { I } from "../Fiche";
+import { I } from "../fiche/Icon";
 
 /* Éléments partagés par l'éditeur et ses éditeurs d'onglets (verrou d'offre, envoi de média). */
 export const UPGRADE_PATH = "/espace-client/abonnements";

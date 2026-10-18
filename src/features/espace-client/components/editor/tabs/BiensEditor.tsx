@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import type { BienData as Bien } from "../../../../../types";
-import { I } from "../../Fiche";
+import { I } from "../../fiche/Icon";
 import { uploadMedia } from "../shared";
 import type { TabEditorProps } from "../types";
 

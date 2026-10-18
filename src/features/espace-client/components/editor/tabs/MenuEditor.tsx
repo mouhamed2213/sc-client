@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ChangeEvent } from "react";
 import type { Plat, SectionMenu } from "../../../../../types";
-import { I } from "../../Fiche";
+import { I } from "../../fiche/Icon";
 import { toURL, uploadMedia } from "../shared";
 import type { TabEditorProps } from "../types";
 

@@ -7,7 +7,7 @@ import type {
   Plan,
   Secteur,
 } from "../../../../../types";
-import { I } from "../../Fiche";
+import { I } from "../../fiche/Icon";
 
 interface Props {
   fiche: FicheRecord;

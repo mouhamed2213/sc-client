@@ -6,7 +6,7 @@ import type {
   Taille,
   Theme,
 } from "../../../../../types";
-import { I } from "../../Fiche";
+import { I } from "../../fiche/Icon";
 import { Lock, imageInput } from "../shared";
 
 interface Props {

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import type { FicheRecord, Plan } from "../../../../../types";
-import { I } from "../../Fiche";
+import { I } from "../../fiche/Icon";
 import { UPGRADE_PATH } from "../shared";
 
 /** Bandeau « Votre formule » avec lien vers l'offre supérieure. */

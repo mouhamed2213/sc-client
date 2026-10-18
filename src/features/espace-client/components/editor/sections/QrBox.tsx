@@ -1,6 +1,7 @@
 import { ENV } from "../../../../../lib/env";
 import type { FicheRecord } from "../../../../../types";
-import { I, QR } from "../../Fiche";
+import { I } from "../../fiche/Icon";
+import { QR } from "../../fiche/QR";
 
 /** Aperçu du QR code de la fiche, téléchargement SVG et lien de commande du sticker. */
 export default function QrBox({ fiche }: { fiche: FicheRecord }) {

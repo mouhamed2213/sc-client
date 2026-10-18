@@ -8,7 +8,7 @@ import type {
   Plan,
   TabType,
 } from "../../../../../types";
-import { I } from "../../Fiche";
+import { I } from "../../fiche/Icon";
 import ContentEditor, { isEditable } from "../ContentEditor";
 import { Lock } from "../shared";
 import { tabsOf } from "../tabsOf";

@@ -1,5 +1,5 @@
 import type { FicheRecord } from "../../../../../types";
-import { I } from "../../Fiche";
+import { I } from "../../fiche/Icon";
 import { imageInput } from "../shared";
 
 /** Champs d'identité (nom, contacts…), photo de profil et logo. */

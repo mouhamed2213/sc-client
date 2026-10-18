@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import type { SectionCatalogue } from "../../../../../types";
-import { I } from "../../Fiche";
+import { I } from "../../fiche/Icon";
 import { Lock, uploadMedia } from "../shared";
 import type { TabEditorProps } from "../types";
 
