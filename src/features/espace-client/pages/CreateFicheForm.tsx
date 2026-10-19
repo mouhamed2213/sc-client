@@ -3,6 +3,7 @@ import type { ChangeEvent, FormEvent, ReactNode } from "react";
 import { useId, useRef, useState } from "react";
 import "../../../styles/create-fiche-form.css";
 import { createFiche } from "../espaceClient.service";
+import { getToken as getSessionToken } from "../../../lib/session";
 
 // Formulaire de création d’une fiche → POST /api/fiches
 // Une fiche naît toujours en formule Essentielle : on ne demande donc que l'identité.
@@ -86,14 +87,6 @@ const EMPTY: Values = {
   secteur: "",
 };
 
-const readToken = (): string | null => {
-  try {
-    return localStorage.getItem("client_token");
-  } catch {
-    return null;
-  }
-};
-
 const digits = (s: string) => s.replace(/\D/g, "").length;
 
 function validate(v: Values, sameWhatsapp: boolean): Errors {
@@ -115,7 +108,7 @@ function validate(v: Values, sameWhatsapp: boolean): Errors {
 // ───────── Composant ─────────
 
 export default function CreateFicheForm({
-  getToken = readToken,
+  getToken = getSessionToken,
   onCreated,
   onUnauthorized,
   publicBaseUrl = "https://supportconnecte.com",

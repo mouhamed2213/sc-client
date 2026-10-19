@@ -1,11 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
 import type { FormEvent } from "react";
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import AuthField from "../../../components/auth/AuthField";
 import AuthShell from "../../../components/auth/AuthShell";
 import { Icon } from "../../../components/Icons";
 import { AFTER_LOGIN, A_LOGIN as T } from "../../../data/auth";
+import { useSession } from "../../../lib/session";
 import { EMAIL_RE, safePath } from "../../../utils/auth";
 import { login } from "../auth.service";
 
@@ -15,11 +16,10 @@ type Errors = { email?: string; password?: string };
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const session = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<Errors>({});
-  const [fail, setFail] = useState("");
-  const [sending, setSending] = useState(false);
 
   const target = safePath(
     (location.state as { from?: string } | null)?.from ??
@@ -27,29 +27,27 @@ export default function LoginPage() {
     AFTER_LOGIN
   );
 
-  const submit = async (ev: FormEvent) => {
-    ev.preventDefault();
-    const e: Errors = {};
-    if (!EMAIL_RE.test(email.trim())) e.email = T.errors.email;
-    if (!password) e.password = T.errors.password;
-    setErr(e);
-    setFail("");
-    if (Object.keys(e).length) return;
-
-    setSending(true);
-    mutate({
-      email,
-      password,
-    });
-    setSending(false);
-  };
-
-  const { mutate, isError, error } = useMutation({
+  const { mutate, isPending, isError, error } = useMutation({
     mutationFn: login,
     onSuccess: () => {
       navigate(target, { replace: true });
     },
   });
+  const sending = isPending;
+
+  // Déjà connecté : inutile de ressaisir ses identifiants.
+  if (session) return <Navigate to={target} replace />;
+
+  const submit = (ev: FormEvent) => {
+    ev.preventDefault();
+    const e: Errors = {};
+    if (!EMAIL_RE.test(email.trim())) e.email = T.errors.email;
+    if (!password) e.password = T.errors.password;
+    setErr(e);
+    if (Object.keys(e).length) return;
+
+    mutate({ email, password });
+  };
 
   return (
     <AuthShell

@@ -11,6 +11,7 @@ import Footer from "./components/Footer";
 import Header from "./components/Header";
 import { IconSprite } from "./components/Icons";
 import { SECTORS } from "./data/secteurs";
+import RequireAuth from "./features/auth/RequireAuth";
 import { ForgotPasswordPage } from "./features/auth/pages/ForgotPasswordPage";
 import LoginPage from "./features/auth/pages/LoginPage"; // Importez votre page de connexion
 import RegisterPage from "./features/auth/pages/RegisterPage";
@@ -137,7 +138,14 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
           {/* Pages espace client */}
-          <Route path="/espace-client" element={<ClientLayout />}>
+          <Route
+            path="/espace-client"
+            element={
+              <RequireAuth>
+                <ClientLayout />
+              </RequireAuth>
+            }
+          >
             <Route index element={<DashboardPage />} />
             <Route path="fiche/preview/:id" element={<FichePage />} />
             <Route path="demandes-rappel" element={<CallbackRequestsPage />} />

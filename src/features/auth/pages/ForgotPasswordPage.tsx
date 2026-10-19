@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { api } from "../../../lib/api";
+import { forgotPassword } from "../auth.service";
 
 export const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
@@ -18,7 +18,7 @@ export const ForgotPasswordPage = () => {
     setSuccess(false);
 
     try {
-      await api.post("auth/forgot-password", { email });
+      await forgotPassword(email);
       setSuccess(true);
     } catch {
       setError(

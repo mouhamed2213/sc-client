@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { A_REGISTER as T } from "../../../data/auth";
-import { api } from "../../../lib/api";
+import { resetPassword } from "../auth.service";
 import { passwordOk } from "../../../utils/auth";
 
 type Errors = Partial<Record<string, string>>;
@@ -38,15 +38,12 @@ export const ResetPasswordPage = () => {
 
     setError(errors);
 
-    if (Object.keys(errors).length > 0) return;
+    if (Object.keys(errors).length > 0 || !token) return;
 
     setLoading(true);
 
     try {
-      await api.post("auth/reset-password", {
-        token,
-        password,
-      });
+      await resetPassword({ token, password });
 
       setSuccess(true);
     } catch {

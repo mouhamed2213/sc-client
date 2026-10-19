@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { Link, Navigate, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import "../../../styles/layout.css";
-import { apiPost } from "../lib/api";
-import { readClientUser } from "./useClientUser";
+import { useSession } from "../../../lib/session";
+import { logout as signOut } from "../../auth/auth.service";
 
 /*
   Cadre de l'espace client : menu latéral (Tableau de bord, Paramètres) + zone de contenu (<Outlet />).
@@ -78,7 +78,7 @@ const NAV: {
 
 export default function ClientLayout({ children }: { children?: ReactNode }) {
   const { pathname } = useLocation();
-  const user = readClientUser();
+  const user = useSession()?.user;
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -97,18 +97,11 @@ export default function ClientLayout({ children }: { children?: ReactNode }) {
     };
   }, [open]);
 
-  const logout = async () => {
-    try {
-      await apiPost("auth/logout");
-    } catch {
-      /* session déjà expirée : on quitte quand même */
-    }
-    localStorage.removeItem("client_token");
-    localStorage.removeItem("client_user");
-    window.location.assign("/login");
-  };
+  // Prévient le serveur puis supprime la session ; <RequireAuth> renvoie alors vers /login.
+  const logout = () => void signOut();
 
-  if (!user) return <Navigate to="/login" replace state={{ from: pathname }} />;
+  // La protection de la route est assurée par <RequireAuth> (App.tsx) ; ceci rassure seulement TypeScript.
+  if (!user) return null;
 
   return (
     <div className={`cl${open ? " open" : ""}`}>

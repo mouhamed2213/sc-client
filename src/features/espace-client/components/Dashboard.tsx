@@ -5,7 +5,8 @@ import {
   dashboardFichesKey,
   useDashboardFiches,
 } from "../hooks/useDashboardFiches";
-import { ApiError } from "../lib/api";
+import { isAuthFailure } from "../../../lib/apiError";
+import { clearSession } from "../../../lib/session";
 import type { Health } from "../lib/dashboard";
 import {
   checks,
@@ -106,7 +107,7 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
           onCreated={handleCreated}
           onUnauthorized={() => {
             setCreateOpen(false);
-            window.location.assign("/login");
+            clearSession(); // <RequireAuth> renvoie vers /login
           }}
         />
       </section>
@@ -115,9 +116,7 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
 
   if (isPending) return <Skeleton />;
   if (isError) {
-    const expired =
-      error instanceof ApiError &&
-      (error.status === 401 || error.status === 403);
+    const expired = isAuthFailure(error);
     return (
       <div className="db">
         <div className="db-state" role="alert">

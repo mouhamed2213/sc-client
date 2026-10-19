@@ -1,8 +1,7 @@
 // create fiche
-import axios from "axios";
 import { api } from "../../lib/api";
 import type { ApiFiche } from "./api-types";
-import { ApiError } from "./lib/api";
+import { toApiError } from "../../lib/apiError";
 import type { SubscriptionKpi } from "./pages/SubscriptionPage";
 import type { PlanType } from "../../types";
 
@@ -25,17 +24,9 @@ export async function getDashboardFiche(
 export async function getKpi(): Promise<SubscriptionKpi> {
   try {
     const response = await api.get<SubscriptionKpi>("subscription/kpi");
-    console.log(response.data);
-
     return response.data;
   } catch (e) {
-    if (axios.isAxiosError(e)) {
-      throw new ApiError(
-        e.response?.data?.error?.message ?? "Une erreur est survenue.",
-        e.response?.data?.error?.code
-      );
-    }
-    throw e;
+    throw toApiError(e);
   }
 }
 

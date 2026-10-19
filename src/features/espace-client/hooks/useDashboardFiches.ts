@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getDashboardFiche } from "../espaceClient.service";
-import { ApiError } from "../lib/api";
+import { isAuthFailure } from "../../../lib/apiError";
 
 export const dashboardFichesKey = ["client", "dashboard", "fiches"] as const;
 
@@ -11,7 +11,5 @@ export const useDashboardFiches = () =>
     queryFn: ({ signal }) => getDashboardFiche(signal),
     staleTime: 60_000,
     // Inutile de réessayer une session expirée ou un accès refusé
-    retry: (n, e) =>
-      !(e instanceof ApiError && (e.status === 401 || e.status === 403)) &&
-      n < 2,
+    retry: (n, e) => !isAuthFailure(e) && n < 2,
   });

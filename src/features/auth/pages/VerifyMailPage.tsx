@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { api } from "../../../lib/api";
+import { toApiError } from "../../../lib/apiError";
+import { verifyEmail } from "../auth.service";
 
 export const VerifyMailPage = () => {
   const [searchParams] = useSearchParams();
@@ -24,24 +25,10 @@ export const VerifyMailPage = () => {
     setError("");
 
     try {
-      await api.post("auth/verify-email", { token });
+      await verifyEmail(token);
       setSuccess(true);
     } catch (err: unknown) {
-      const message =
-        typeof err === "object" &&
-        err !== null &&
-        "response" in err &&
-        typeof err.response === "object" &&
-        err.response !== null &&
-        "data" in err.response &&
-        typeof err.response.data === "object" &&
-        err.response.data !== null &&
-        "message" in err.response.data &&
-        typeof err.response.data.message === "string"
-          ? err.response.data.message
-          : "La vérification a échoué. Le lien est peut-être expiré.";
-
-      setError(message);
+      setError(toApiError(err).message);
     } finally {
       setLoading(false);
     }

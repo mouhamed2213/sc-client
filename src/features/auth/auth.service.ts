@@ -1,10 +1,14 @@
-import axios from "axios";
-import { redirect } from "react-router-dom";
 import { api } from "../../lib/api";
-import { ApiError } from "../../lib/apiError";
+import { toApiError } from "../../lib/apiError";
+import { clearSession, saveSession } from "../../lib/session";
 import { IRegister, Login } from "../../types";
 
-interface LoginResponse {
+/*
+  Appels d'authentification. Toutes les erreurs remontent en `ApiError` (message lisible + code + statut).
+  La session (jeton + utilisateur) n'est lue et écrite que par lib/session.ts.
+*/
+
+export interface LoginResponse {
   user: {
     id: number;
     email: string;
@@ -15,57 +19,70 @@ interface LoginResponse {
   token: string;
 }
 
-export const register = async (registerData: IRegister) => {
+export async function register(registerData: IRegister) {
   try {
     const res = await api.post("/auth/register", {
       email: registerData.email,
       password: registerData.password,
       nom: registerData.name,
     });
-
     return res.data;
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new ApiError(
-        error.response?.data?.error?.message ?? "Une erreur est survenue.",
-        error.response?.data?.error?.code,
-        error.response?.status
-      );
-    }
-
-    throw error;
+    throw toApiError(error);
   }
-};
+}
 
-export const login = async (loginData: Login) => {
+export async function login(loginData: Login): Promise<LoginResponse> {
   try {
     const res = await api.post<LoginResponse>("/auth/login", loginData);
-
-    localStorage.setItem("client_token", res.data.token);
-    localStorage.setItem(
-      "client_user",
-      JSON.stringify({
-        name: res.data.user.nom,
-        email: res.data.user.email,
-      })
-    );
-
+    const { token, user } = res.data;
+    saveSession({
+      token,
+      user: { id: user.id, role: user.role, name: user.nom, email: user.email },
+    });
     return res.data;
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new ApiError(
-        error.response?.data?.error?.message ?? "Une erreur est survenue.",
-        error.response?.data?.error?.code,
-        error.response?.status
-      );
-    }
-
-    throw error;
+    throw toApiError(error);
   }
-};
+}
 
-export const logout = () => {
-  // clean localstorage
-  localStorage.clear();
-  return redirect("/login");
-};
+/** Prévient le serveur (avec le jeton), puis supprime la session locale quoi qu'il arrive. */
+export async function logout(): Promise<void> {
+  try {
+    await api.post("/auth/logout");
+  } catch {
+    /* session déjà expirée ou serveur injoignable : on quitte quand même */
+  } finally {
+    clearSession();
+  }
+}
+
+export async function verifyEmail(token: string): Promise<void> {
+  try {
+    await api.post("/auth/verify-email", { token });
+  } catch (error) {
+    throw toApiError(
+      error,
+      "La vérification a échoué. Le lien est peut-être expiré.",
+    );
+  }
+}
+
+export async function forgotPassword(email: string): Promise<void> {
+  try {
+    await api.post("/auth/forgot-password", { email });
+  } catch (error) {
+    throw toApiError(error);
+  }
+}
+
+export async function resetPassword(payload: {
+  token: string;
+  password: string;
+}): Promise<void> {
+  try {
+    await api.post("/auth/reset-password", payload);
+  } catch (error) {
+    throw toApiError(error);
+  }
+}
