@@ -4,7 +4,7 @@ import { isAxiosError } from "axios";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../../../lib/api";
 import Fiche from "../../espace-client/components/Fiche";
-import { toFicheRecord, type ApiFicheDetail } from "../../espace-client/lib/ficheDto";
+import { fetchFiche } from "../lib/ficheApi";
 import "./FicheStats.css";
 
 type PassageSource = "qr" | "nfc" | "direct";
@@ -21,13 +21,7 @@ export default function PublicFichePage() {
   const ficheQuery = useQuery({
     queryKey: ["public-fiche", slug],
     enabled: slug.length > 0,
-    queryFn: async ({ signal }) => {
-      const response = await api.get<{ fiche: ApiFicheDetail }>(
-        `fiches/public/${encodeURIComponent(slug)}`,
-        { signal },
-      );
-      return toFicheRecord(response.data.fiche);
-    },
+    queryFn: ({ signal }) => fetchFiche(`fiches/public/${encodeURIComponent(slug)}`, signal),
     retry: false,
   });
 

@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../../../lib/api";
 import Fiche from "../components/Fiche";
-import { toFicheRecord, type ApiFicheDetail } from "../lib/ficheDto";
+import { fetchFiche } from "../lib/ficheApi";
 import "./FicheStats.css";
 
 type PassageStats = {
@@ -302,13 +302,7 @@ export function FichePage() {
   } = useQuery({
     queryKey: ["fiche-preview", ficheId],
     enabled: Number.isInteger(ficheId) && ficheId > 0,
-    queryFn: async ({ signal }) => {
-      const response = await api.get<{ fiche: ApiFicheDetail }>(
-        `fiches/${ficheId}`,
-        { signal },
-      );
-      return toFicheRecord(response.data.fiche);
-    },
+    queryFn: ({ signal }) => fetchFiche(`fiches/${ficheId}`, signal),
   });
 
   if (!Number.isInteger(ficheId) || ficheId <= 0) {

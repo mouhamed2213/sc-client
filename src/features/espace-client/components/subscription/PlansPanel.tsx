@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FORMULES, PlanType } from "../../../../types";
 import { formatPrice } from "../../lib/formatPrice";
-import { ApiFiche } from "../../api-types";
+import type { ApiFicheSummary } from "../../../../types";
 
 export function PlansPanel({ onClose }: { onClose: () => void }) {
   const [activePlan, setActivePlan] = useState<PlanType>("ESSENTIELLE");
@@ -99,7 +99,7 @@ export const initials = (prenom?: string | null, nom?: string | null) =>
   `${prenom?.trim().charAt(0) ?? ""}${nom?.trim().charAt(0) ?? ""}`.toUpperCase() ||
   "?";
 
-export function getPlan(fiche: ApiFiche): string | undefined {
+export function getPlan(fiche: ApiFicheSummary): string | undefined {
   return (
     fiche.subscriptions?.[0]?.plan?.type ?? fiche.abonnementActif?.plan?.type
   );

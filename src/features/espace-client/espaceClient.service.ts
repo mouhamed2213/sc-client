@@ -1,6 +1,6 @@
 // create fiche
 import { api } from "../../lib/api";
-import type { ApiFiche } from "./api-types";
+import type { ApiFicheSummary } from "../../types";
 import { toApiError } from "../../lib/apiError";
 import type { SubscriptionKpi } from "./pages/SubscriptionPage";
 import type { PlanType } from "../../types";
@@ -12,8 +12,8 @@ export async function createFiche(data: any) {
 
 export async function getDashboardFiche(
   signal?: AbortSignal
-): Promise<ApiFiche[]> {
-  const response = await api.get<ApiFiche[]>("client/dashboard/fiches", {
+): Promise<ApiFicheSummary[]> {
+  const response = await api.get<ApiFicheSummary[]>("client/dashboard/fiches", {
     signal,
   });
   return response.data;

@@ -25,13 +25,33 @@ lib/fichePayload.ts       Brouillon → corps du PATCH (n'envoie que les différ
 lib/ficheSource.ts        Source de données : API ou mock (VITE_USE_MOCK_FICHES)
 ```
 
+## Modèles : où est la référence ?
+
+```
+src/types/
+├── fiche.ts   FicheRecord = LA RÉFÉRENCE côté front (éditeur, fiche publique, tests), FicheData, Onglet, FICHE_DATA_KEYS
+├── plan.ts    Plan (droits d'une formule), FORMULES, PlanType
+├── api.ts     Formes BRUTES du serveur : ApiFicheDetail (GET/PATCH fiches/:id), ApiFicheSummary (dashboard)
+├── auth.ts    IRegister, Login
+└── index.ts   barrel : `import type { FicheRecord } from "../../types"` fonctionne toujours
+```
+
+- Les composants ne manipulent **jamais** un DTO : `lib/ficheApi.ts` (`fetchFiche`, `patchFiche`, `toFicheRecord`) est la
+  seule frontière serveur → front.
+- Les enums « serveur » en MAJUSCULES sont **dérivés** du domaine (`Uppercase<Secteur>`, `Lowercase<PlanType>` pour
+  `Formule`) : ils ne peuvent plus diverger.
+- `FICHE_DATA_KEYS` (types/fiche.ts) liste les clés de `FicheData` **une seule fois** ; elle sert à la lecture
+  (`ficheApi.ts`) et au PATCH (`fichePayload.ts`). Oublier une clé après en avoir ajouté une à `FicheData` fait échouer
+  `pnpm typecheck`. Seule la synchronisation avec le schéma Zod du serveur reste manuelle
+  (`api-sc/src/modules/fiches/fiches.schemas.ts`).
+
 ## Ajouter un type d'onglet
 
 1. Ajouter la valeur à `TabType` (`src/types/index.ts`) et la déclarer dans `TAB_TYPES` / les plans (`src/lib/plans.ts`).
 2. Créer `components/editor/tabs/XxxEditor.tsx` (props : `TabEditorProps`) et l'inscrire dans `editor/ContentEditor.tsx`.
 3. Créer `components/fiche/views/XxxView.tsx` (props : `ViewProps`) et l'inscrire dans `fiche/SectionBody.tsx`.
-4. Si l'onglet stocke une nouvelle clé dans `fiche.data` : l'ajouter à `DATA_KEYS` dans `lib/fichePayload.ts`
-   (avec son nettoyage dans `clean`) et au schéma serveur (`updateFicheSchema`).
+4. Si l'onglet stocke une nouvelle clé dans `fiche.data` : l'ajouter à `FicheData` et à `FICHE_DATA_KEYS`
+   (`types/fiche.ts`), prévoir son nettoyage dans `lib/fichePayload.ts`, et l'ajouter au schéma serveur (`updateFicheSchema`).
 
 Les deux registres sont typés `Record<TabType, …>` : **oublier l'étape 2 ou 3 fait échouer `pnpm typecheck`**.
 

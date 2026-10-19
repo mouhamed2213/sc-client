@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { useState } from "react";
-import type { ApiFiche } from "../api-types";
+import type { ApiFicheSummary } from "../../../types";
 import { StatCard } from "../components/StatCard";
 import { PaymentModal } from "../components/subscription/PaymentModal";
 import {
@@ -22,7 +22,7 @@ export type SubscriptionKpi = {
 
 export default function SubscriptionPage() {
   const queryClient = useQueryClient();
-  const [paymentFiche, setPaymentFiche] = useState<ApiFiche | null>(null);
+  const [paymentFiche, setPaymentFiche] = useState<ApiFicheSummary | null>(null);
   const [showPlans, setShowPlans] = useState(false);
   // 1. Récupération des fiches
   const {
@@ -32,7 +32,7 @@ export default function SubscriptionPage() {
     error: fichesError,
     refetch,
     isFetching,
-  } = useQuery<ApiFiche[]>({
+  } = useQuery<ApiFicheSummary[]>({
     queryKey: ["ficheSubscriptionPage"],
     queryFn: ({ signal }) => getDashboardFiche(signal),
   });

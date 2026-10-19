@@ -1,5 +1,4 @@
 import { isAxiosError } from "axios";
-import { api } from "../../../lib/api";
 import type { FicheRecord } from "../../../types";
 import { FICHES } from "../data/mockFiches";
 import { uploadFicheMedia } from "../services/media.service";
@@ -108,7 +107,7 @@ function hasLocalMediaReference(value: unknown): boolean {
   return false;
 }
 
-import { toFicheRecord, type ApiFicheDetail } from "./ficheDto";
+import { fetchFiche, patchFiche } from "./ficheApi";
 import { planOf } from "../../../lib/plans";
 import { buildUpdatePayload, labelForChamp } from "./fichePayload";
 
@@ -193,8 +192,7 @@ export const apiSource: FicheSource = {
     const id = Number(key);
     if (!Number.isInteger(id) || id <= 0) throw new FicheError("Identifiant de fiche invalide.", "notfound");
     try {
-      const res = await api.get<{ fiche: ApiFicheDetail }>(`fiches/${id}`);
-      return toFicheRecord(res.data.fiche);
+      return await fetchFiche(`fiches/${id}`);
     } catch (e) {
       throw toFicheError(e);
     }
@@ -207,9 +205,11 @@ export const apiSource: FicheSource = {
     try {
       // Les contrôles de l'éditeur téléversent normalement les fichiers dès leur sélection.
       // Ce passage couvre les chemins qui laisseraient encore blob:/data: dans le brouillon.
-      const payload = pendingUploads.length
-        ? await uploadLocalMediaReferences(originalPayload, draft.id)
-        : originalPayload;
+      const payload = (
+        pendingUploads.length
+          ? await uploadLocalMediaReferences(originalPayload, draft.id)
+          : originalPayload
+      ) as Record<string, unknown>; // même forme, seules les URL locales ont changé
 
       if (hasLocalMediaReference(payload)) {
         throw new FicheError(
@@ -218,12 +218,12 @@ export const apiSource: FicheSource = {
         );
       }
 
-      const res = await api.patch<{ fiche: ApiFicheDetail }>(`fiches/${draft.id}`, payload);
+      const fiche = await patchFiche(draft.id, payload);
       const notes = [
         ...(skipped.length ? [`Ignoré car incomplet : ${skipped.join(", ")}.`] : []),
         ...(ignored.length ? [`Non enregistré (non inclus dans votre formule) : ${ignored.join(", ")}.`] : []),
       ];
-      return { fiche: toFicheRecord(res.data.fiche), notes };
+      return { fiche, notes };
     } catch (e) {
       throw toFicheError(e);
     }

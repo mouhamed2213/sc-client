@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { FORMULES } from "../../../../types";
 import type { PlanType } from "../../../../types";
-import { ApiFiche } from "../../api-types";
+import type { ApiFicheSummary } from "../../../../types";
 import { formatPrice } from "../../lib/formatPrice";
 import { upgradeFichePlan } from "../../espaceClient.service";
 import { getPlan } from "./PlansPanel";
@@ -20,7 +20,7 @@ export function PaymentModal({
   onClose,
   onSuccess,
 }: {
-  fiche: ApiFiche;
+  fiche: ApiFicheSummary;
   onClose: () => void;
   onSuccess?: () => void;
 }) {

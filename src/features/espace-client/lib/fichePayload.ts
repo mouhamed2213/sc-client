@@ -1,4 +1,4 @@
-import type { FicheRecord, Plan } from "../../../types";
+import { FICHE_DATA_KEYS, type FicheRecord, type Plan } from "../../../types";
 
 /*
   Construit le corps de PATCH /api/fiches/:id à partir du brouillon de l'éditeur.
@@ -26,23 +26,6 @@ const IDENTITY = [
   "site",
   "adresse",
   "googlePlaceId",
-] as const;
-
-const DATA_KEYS = [
-  "secteur",
-  "premierBouton",
-  "messageWhatsapp",
-  "presentation",
-  "reseauxSociaux",
-  "liens",
-  "horaires",
-  "galerie",
-  "sections",
-  "menu",
-  "biens",
-  "rendezVous",
-  "onglets",
-  "entete",
 ] as const;
 
 type Json = Record<string, unknown>;
@@ -188,7 +171,7 @@ export function buildUpdatePayload(previous: FicheRecord, draft: FicheRecord, pl
   for (const k of IDENTITY) if (!same(previous[k], draft[k])) payload[k] = str(draft[k]);
 
   const data: Json = {};
-  for (const k of DATA_KEYS) {
+  for (const k of FICHE_DATA_KEYS) {
     if (same(previous.data[k], draft.data[k])) continue;
     const value = draft.data[k];
     data[k] = clean[k] ? clean[k](value) : typeof value === "string" ? value.trim() : value;
