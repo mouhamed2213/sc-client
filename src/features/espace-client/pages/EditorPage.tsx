@@ -1,12 +1,10 @@
 import { useEffect, useRef } from "react";
-import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import Editor from "../components/Editor";
 import Fiche from "../components/Fiche";
 import { useDashboardFiches } from "../hooks/useDashboardFiches";
 import { useFicheEditor } from "../hooks/useFicheEditor";
 import { useUnsavedGuard } from "../hooks/useUnsavedGuard";
-import { MOCK_FICHES, ficheSource } from "../lib/ficheSource";
-import { PLANS } from "../../../lib/plans";
 import type { FicheRecord } from "../../../types";
 
 /*
@@ -14,28 +12,26 @@ import type { FicheRecord } from "../../../types";
   direct à droite.
   Routes : /espace-client/editeur  et  /espace-client/editeur/:id   (id numérique de la fiche)
 
-  Données : lib/ficheSource.ts — GET / PATCH /api/fiches/:id (ou données fictives si VITE_USE_MOCK_FICHES=true).
+  Données : lib/ficheSource.ts — GET / PATCH /api/fiches/:id.
 */
 
 // Le serveur refuse déjà toute modification d'une fiche suspendue (FICHE_SUSPENDUE) ou dont l'abonnement est échu
 // (ABONNEMENT_EXPIRE) ; on le dit avant et on verrouille l'éditeur.
 const lockReason = (f: FicheRecord): string | null => {
-  if (f.statut === "suspendue") return "Cette fiche est suspendue : la modification est impossible.";
-  if (f.expiree) return "L'abonnement de cette fiche a expiré : la modification est bloquée tant qu'il n'est pas renouvelé.";
+  if (f.statut === "suspendue")
+    return "Cette fiche est suspendue : la modification est impossible.";
+  if (f.expiree)
+    return "L'abonnement de cette fiche a expiré : la modification est bloquée tant qu'il n'est pas renouvelé.";
   return null;
 };
 
 export default function EditorPage() {
   const { id } = useParams<{ id: string }>();
-  if (!id) return ficheSource.isMock ? <MockIndex /> : <ApiIndex />;
+  if (!id) return <ApiIndex />;
   return <FicheEditor key={id} id={id} />;
 }
 
 /* /editeur sans identifiant (menu latéral) : on ouvre la première fiche du client */
-function MockIndex() {
-  return <Navigate to={`/espace-client/editeur/${MOCK_FICHES[0].slug}`} replace />;
-}
-
 function ApiIndex() {
   const { data, isPending, isError, refetch } = useDashboardFiches();
   if (isPending)
@@ -64,10 +60,20 @@ function ApiIndex() {
 }
 
 function FicheEditor({ id }: { id: string }) {
-  const navigate = useNavigate();
   const scroller = useRef<HTMLDivElement>(null);
-  const { draft, setDraft, status, loadError, dirty, saving, saveError, notes, save, reset, retry, isMock } =
-    useFicheEditor(id);
+  const {
+    draft,
+    setDraft,
+    status,
+    loadError,
+    dirty,
+    saving,
+    saveError,
+    notes,
+    save,
+    reset,
+    retry,
+  } = useFicheEditor(id);
 
   useEffect(() => {
     document.title = "Modifier ma fiche — Support Connecté";
@@ -85,42 +91,23 @@ function FicheEditor({ id }: { id: string }) {
   if (status === "error" || !draft)
     return (
       <div className="fiche-preview-state" role="alert">
-        <h1>{loadError?.kind === "notfound" ? "Fiche introuvable" : "Impossible de charger la fiche"}</h1>
+        <h1>
+          {loadError?.kind === "notfound"
+            ? "Fiche introuvable"
+            : "Impossible de charger la fiche"}
+        </h1>
         <p>{loadError?.message ?? "Une erreur est survenue."}</p>
-        {loadError?.kind !== "notfound" && loadError?.kind !== "auth" && <button onClick={retry}>Réessayer</button>}{" "}
+        {loadError?.kind !== "notfound" && loadError?.kind !== "auth" && (
+          <button onClick={retry}>Réessayer</button>
+        )}{" "}
         <Link to="/espace-client">Retour au tableau de bord</Link>
       </div>
     );
 
   const locked = lockReason(draft);
-  const demoUnknown = isMock && !MOCK_FICHES.some(f => f.slug === id);
 
   return (
     <div className="edp-page">
-      {isMock && (
-        <div
-          className="edp-mock"
-          role="group"
-          aria-label="Fiche de démonstration"
-        >
-          <span className="edp-mock-t">
-            Données fictives <small>aperçu de chaque formule</small>
-          </span>
-          <div className="edp-seg">
-            {MOCK_FICHES.map(f => (
-              <button
-                key={f.slug}
-                className={f.slug === draft.slug ? "on" : ""}
-                onClick={() => navigate(`/espace-client/editeur/${f.slug}`)}
-              >
-                {`${f.prenom} ${f.nom}`.trim()}
-                <em className={`pl-${f.formule}`}>{PLANS[f.formule].label}</em>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div className="demo-body m-editeur">
         <aside className="demo-ed">
           <div className="edp-bar">
@@ -149,15 +136,8 @@ function FicheEditor({ id }: { id: string }) {
             >
               {saving ? "Enregistrement…" : "Enregistrer"}
             </button>
-
           </div>
 
-          {demoUnknown && (
-            <p className="edp-note">
-              Mode démonstration : la fiche « {id} » n'existe pas dans les données fictives, une fiche de démo est
-              affichée.
-            </p>
-          )}
           {locked && (
             <p className="edp-note edp-warn" role="alert">
               {locked}
@@ -170,7 +150,8 @@ function FicheEditor({ id }: { id: string }) {
                 <>
                   {" "}
                   <button onClick={retry}>
-                    Recharger la fiche (mes modifications non enregistrées seront perdues)
+                    Recharger la fiche (mes modifications non enregistrées
+                    seront perdues)
                   </button>
                 </>
               )}
@@ -181,7 +162,9 @@ function FicheEditor({ id }: { id: string }) {
                       <b>{i.label}</b> — {i.message}
                     </li>
                   ))}
-                  {saveError.issues.length > 8 && <li>… et {saveError.issues.length - 8} autre(s)</li>}
+                  {saveError.issues.length > 8 && (
+                    <li>… et {saveError.issues.length - 8} autre(s)</li>
+                  )}
                 </ul>
               )}
             </div>

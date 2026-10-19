@@ -22,7 +22,7 @@ components/
     ├── Section.tsx, Carousel.tsx, Sheet.tsx, Photos.tsx, video.tsx, QR.tsx, Icon.tsx, usePullQR.ts, format.ts, types.ts
 hooks/useFicheEditor.ts   Brouillon local, état « non enregistré », sauvegarde
 lib/fichePayload.ts       Brouillon → corps du PATCH (n'envoie que les différences)
-lib/ficheSource.ts        Source de données : API ou mock (VITE_USE_MOCK_FICHES)
+lib/ficheSource.ts        Source de données de l'éditeur (API : GET / PATCH fiches/:id)
 ```
 
 ## Modèles : où est la référence ?
@@ -58,8 +58,14 @@ Les deux registres sont typés `Record<TabType, …>` : **oublier l'étape 2 ou 
 ## Tests
 
 ```bash
-pnpm test          # Vitest : fichePayload + rendu de chaque onglet (éditeur et fiche) sur les fiches de démo
+pnpm test          # Vitest : fichePayload + rendu de chaque onglet (éditeur et fiche) sur les fiches de test (src/test/fixtures)
 pnpm typecheck
 ```
 
-`components/tabs.test.tsx` rend chaque type d'onglet pour chaque fiche de démonstration : il protège ce découpage.
+`components/tabs.test.tsx` rend chaque type d'onglet pour chaque fiche de test : il protège ce découpage.
+
+## Données de démonstration
+
+Il n'y a plus de mode démo dans l'application. Les fiches fictives vivent dans `src/test/fixtures/fiches.ts`, réservées aux
+tests ; `src/test/noMocksInApp.test.ts` échoue si du code applicatif les importe (elles repartiraient dans le bundle).
+Pour travailler sans serveur, lancez l'API en local (`VITE_API_URL`).

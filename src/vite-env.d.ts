@@ -10,5 +10,4 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL?: string;
   readonly VITE_SUPABASE_ANON_KEY?: string;
   /** « true » : l'éditeur de fiche utilise des données fictives au lieu de l'API. */
-  readonly VITE_USE_MOCK_FICHES?: string;
 }

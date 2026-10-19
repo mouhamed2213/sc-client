@@ -40,11 +40,7 @@ export default function SubscriptionPage() {
   const ficheCount = fiches?.length ?? 0;
 
   // 2. Récupération des KPIs
-  const {
-    data: kpi,
-    isPending: isKpiPending,
-    isError: isKpiError,
-  } = useQuery<SubscriptionKpi>({
+  const { data: kpi } = useQuery<SubscriptionKpi>({
     queryKey: ["kpiSubscription"],
     queryFn: getKpi,
   });

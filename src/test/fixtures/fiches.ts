@@ -1,7 +1,10 @@
-// DONNÉES FICTIVES de l'éditeur (copie de la référence). Supprimer ce fichier + public/demo/ une fois l'API branchée.
+/*
+  FIXTURES DE TEST UNIQUEMENT : cinq fiches complètes (une par formule / secteur) pour les tests Vitest.
+  Ne jamais importer ce fichier depuis le code applicatif (un test le vérifie : src/test/noMocksInApp.test.ts).
+*/
 // Fiches de démonstration — même structure que l'API actuelle (fiches.getBySlug)
 // + nouveaux champs V2 : data.secteur, data.onglets, data.entete, data.menu, data.biens, enLigneSeule.
-import type { FicheRecord, Horaire } from "../../../types";
+import type { FicheRecord, Horaire } from "../../types";
 
 const palm =
   "data:image/svg+xml;utf8," +

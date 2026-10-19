@@ -5,7 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { TAB_TYPES, planOf } from "../../../lib/plans";
 import type { Onglet, TabType } from "../../../types";
-import { FICHES } from "../data/mockFiches";
+import { FICHES } from "../../../test/fixtures/fiches";
 import Editor from "./Editor";
 import Fiche from "./Fiche";
 import ContentEditor, { isEditable } from "./editor/ContentEditor";

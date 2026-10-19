@@ -1,6 +1,5 @@
 import { isAxiosError } from "axios";
 import type { FicheRecord } from "../../../types";
-import { FICHES } from "../data/mockFiches";
 import { uploadFicheMedia } from "../services/media.service";
 import { optimizeImageFile } from "../services/mediaOptimizer";
 
@@ -114,10 +113,9 @@ import { buildUpdatePayload, labelForChamp } from "./fichePayload";
 /**
  * Source de données de l'éditeur de fiche.
  *
- *  - `apiSource`  (par défaut) : GET / PATCH /api/fiches/:id  (api-sc, fiches.routes.ts)
- *  - `mockSource` : données fictives en mémoire — VITE_USE_MOCK_FICHES=true (démos, travail hors ligne)
+ *  - `apiSource` : GET / PATCH /api/fiches/:id  (api-sc, fiches.routes.ts)
  *
- * La page et le hook ne connaissent que cette interface.
+ * La page et le hook ne connaissent que cette interface (les tests peuvent en fournir une autre).
  */
 export interface SaveResult {
   fiche: FicheRecord;
@@ -126,12 +124,10 @@ export interface SaveResult {
 }
 
 export interface FicheSource {
-  /** Identifiant de ce que l'on édite : id numérique de la fiche (API) ou slug d'une fiche de démo. */
+  /** Identifiant de la fiche à éditer : son id numérique. */
   load(key: string): Promise<FicheRecord>;
   /** `previous` = dernière version enregistrée : sert à n'envoyer que ce qui a changé. */
   save(draft: FicheRecord, previous: FicheRecord): Promise<SaveResult>;
-  /** Vrai tant que les données sont fictives : la page affiche alors le sélecteur de démonstration. */
-  readonly isMock: boolean;
 }
 
 /* ───────────── Erreurs lisibles par l'interface ───────────── */
@@ -186,8 +182,6 @@ export function toFicheError(e: unknown): FicheError {
 /* ───────────── Source API ───────────── */
 
 export const apiSource: FicheSource = {
-  isMock: false,
-
   async load(key) {
     const id = Number(key);
     if (!Number.isInteger(id) || id <= 0) throw new FicheError("Identifiant de fiche invalide.", "notfound");
@@ -230,27 +224,5 @@ export const apiSource: FicheSource = {
   },
 };
 
-/* ───────────── Données fictives ───────────── */
-
-export const MOCK_FICHES: readonly FicheRecord[] = FICHES;
-const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
-const store = new Map<string, FicheRecord>(MOCK_FICHES.map(f => [f.slug, clone(f)]));
-const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
-
-export const mockSource: FicheSource = {
-  isMock: true,
-  async load(slug) {
-    await wait(120);
-    // Slug inconnu : on affiche la 1re fiche de démo.
-    return clone(store.get(slug) ?? store.get(MOCK_FICHES[0].slug)!);
-  },
-  async save(draft) {
-    await wait(250);
-    store.set(draft.slug, clone(draft));
-    return { fiche: clone(draft), notes: [] };
-  },
-};
-
-/** Source utilisée par la page : l'API, sauf si VITE_USE_MOCK_FICHES=true. */
-export const ficheSource: FicheSource =
-  import.meta.env.VITE_USE_MOCK_FICHES === "true" ? mockSource : apiSource;
+/** Source de données de l'éditeur. */
+export const ficheSource: FicheSource = apiSource;

@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FICHES } from "../../../data/fiches";
 import Dashboard from "../components/Dashboard";
 import { useDashboardFiches } from "../hooks/useDashboardFiches";
 import { useClientUser } from "../layout/useClientUser";

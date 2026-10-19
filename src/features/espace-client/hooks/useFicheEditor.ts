@@ -98,6 +98,5 @@ export function useFicheEditor(key: string) {
     save,
     reset,
     retry,
-    isMock: ficheSource.isMock,
   };
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { planOf } from "../../../lib/plans";
 import type { FicheRecord } from "../../../types";
-import { FICHES } from "../data/mockFiches";
+import { FICHES } from "../../../test/fixtures/fiches";
 import { buildUpdatePayload, labelForChamp } from "./fichePayload";
 
 const base = (): FicheRecord => structuredClone(FICHES[0]);
