@@ -23,6 +23,7 @@ import ClientLayout from "./features/espace-client/layout/ClientLayout";
 import CallbackRequestsPage from "./features/espace-client/pages/CallbackRequestsPage";
 import { FichePage } from "./features/espace-client/pages/FichePage";
 import PublicFichePage from "./features/espace-client/pages/PublicFichePage";
+import StickerSectionPage from "./features/espace-client/pages/StickerSectionPage";
 import SettingsPage from "./features/espace-client/pages/SettingsPage";
 import SubscriptionPage from "./features/espace-client/pages/SubscriptionPage";
 import AProposPage from "./pages/AProposPage";
@@ -110,6 +111,7 @@ export default function App() {
         <Routes>
           {/* Ouverture publique des fiches connectées (sans le header du site) */}
           <Route path="/f/:slug" element={<PublicFichePage />} />
+          <Route path="/s/:slug/:section" element={<StickerSectionPage />} />
 
           {/* Pages publiques */}
           <Route element={<PublicLayout />}>

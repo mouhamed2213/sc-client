@@ -85,3 +85,17 @@ export const imageInput =
       input.value = "";
     }
   };
+
+/** Télécharge le premier `<svg>` trouvé dans `root` (par exemple un QR code) sous le nom `filename`. */
+export function downloadSvg(root: ParentNode | null, filename: string) {
+  const svg = root?.querySelector("svg");
+  if (!svg) return;
+  const url = URL.createObjectURL(
+    new Blob([svg.outerHTML], { type: "image/svg+xml" })
+  );
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}

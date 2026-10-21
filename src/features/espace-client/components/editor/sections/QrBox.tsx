@@ -2,6 +2,7 @@ import { ENV } from "../../../../../lib/env";
 import type { FicheRecord } from "../../../../../types";
 import { I } from "../../fiche/Icon";
 import { QR } from "../../fiche/QR";
+import { downloadSvg } from "../shared";
 
 /** Aperçu du QR code de la fiche, téléchargement SVG et lien de commande du sticker. */
 export default function QrBox({ fiche }: { fiche: FicheRecord }) {
@@ -26,18 +27,12 @@ export default function QrBox({ fiche }: { fiche: FicheRecord }) {
           </p>
           <button
             className="ed-add-b"
-            onClick={() => {
-              const svg = document.querySelector("#ed-qr-svg svg");
-              if (!svg) return;
-              const url = URL.createObjectURL(
-                new Blob([svg.outerHTML], { type: "image/svg+xml" }),
-              );
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `qr-${fiche.slug}.svg`;
-              a.click();
-              setTimeout(() => URL.revokeObjectURL(url), 2000);
-            }}
+            onClick={() =>
+              downloadSvg(
+                document.querySelector("#ed-qr-svg"),
+                `qr-${fiche.slug}.svg`,
+              )
+            }
           >
             Télécharger mon QR (vectoriel)
           </button>

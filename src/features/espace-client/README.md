@@ -25,6 +25,26 @@ lib/fichePayload.ts       Brouillon → corps du PATCH (n'envoie que les différ
 lib/ficheSource.ts        Source de données de l'éditeur (API : GET / PATCH fiches/:id)
 ```
 
+## Stickers par section
+
+Un sticker (QR) peut ouvrir **une seule section** de la fiche au lieu de la fiche entière : `/s/:slug/:section`
+(`section` = type de l'onglet, ex. `menu`, `biens`, ou l'identifiant d'un onglet personnalisé).
+
+```
+lib/stickerSections.ts                    logique PURE : droits (Pro/Signature), clé d'URL, résolution, section du secteur
+pages/StickerSectionPage.tsx              /s/:slug/:section : charge la fiche, compte un passage « qr », noindex
+components/sticker/StickerSectionView.tsx choisit : la section, ou la fiche complète en repli
+components/sticker/StickerSection.tsx     logo + nom + UNE section + bouton « Voir la fiche complète »
+components/editor/sections/StickerBox.tsx liens et QR (SVG) par section, dans l'éditeur
+```
+
+- **Repli sur la fiche complète** : formule Essentielle, section masquée, supprimée ou inconnue.
+- **La fiche principale (`Fiche.tsx`, `fiche/`) n'est pas modifiée** : la page réutilise `fiche/SectionBody`.
+- Aucune donnée nouvelle : pas de nouvelle clé dans `FicheData`, donc pas de changement de schéma serveur.
+- Préparé pour la suite (stickers gérés comme entités, code `/q/:code`) : le sticker n'aura qu'à rediriger vers
+  `/s/:slug/:section`. Pour une section **propre au sticker** (Wi-Fi, jeu…), il faudra stocker son contenu côté API.
+- `vercel.json` : `/s/...` est servi par l'application (règle `/(.*)` → `index.html`), sans règle supplémentaire.
+
 ## Modèles : où est la référence ?
 
 ```

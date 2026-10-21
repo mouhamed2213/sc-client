@@ -7,6 +7,7 @@ import BlocksBox from "./editor/sections/BlocksBox";
 import IdentityBox from "./editor/sections/IdentityBox";
 import PlanBanner from "./editor/sections/PlanBanner";
 import QrBox from "./editor/sections/QrBox";
+import StickerBox from "./editor/sections/StickerBox";
 import TemplateBox from "./editor/sections/TemplateBox";
 
 /*
@@ -50,6 +51,7 @@ export default function Editor({
     <div className="ed">
       <PlanBanner fiche={fiche} plan={plan} sig={sig} />
       <QrBox fiche={fiche} />
+      <StickerBox fiche={fiche} />
       <TemplateBox
         fiche={fiche}
         plan={plan}
