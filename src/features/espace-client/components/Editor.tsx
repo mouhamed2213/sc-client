@@ -25,9 +25,14 @@ import TemplateBox from "./editor/sections/TemplateBox";
 export default function Editor({
   fiche,
   onChange,
+  previewSection = null,
+  onPreviewSection,
 }: {
   fiche: FicheRecord;
   onChange: (f: FicheRecord) => void;
+  /** Section de sticker actuellement prévisualisée dans le téléphone (null = fiche complète). */
+  previewSection?: string | null;
+  onPreviewSection?: (key: string | null) => void;
 }) {
   const plan = planOf(fiche);
   const sig = fiche.formule === "signature";
@@ -51,7 +56,11 @@ export default function Editor({
     <div className="ed">
       <PlanBanner fiche={fiche} plan={plan} sig={sig} />
       <QrBox fiche={fiche} />
-      <StickerBox fiche={fiche} />
+      <StickerBox
+        fiche={fiche}
+        previewSection={previewSection}
+        onPreviewSection={onPreviewSection}
+      />
       <TemplateBox
         fiche={fiche}
         plan={plan}

@@ -77,6 +77,56 @@ describe("StickerBox (éditeur)", () => {
   });
 });
 
+describe("StickerBox : aperçu dans le téléphone", () => {
+  const mountBox = (props: Record<string, unknown>) => {
+    const host = document.createElement("div");
+    const root = createRoot(host);
+    act(() =>
+      root.render(
+        h(
+          MemoryRouter,
+          null,
+          h(StickerBox, { fiche: fiche("le-sunset"), ...props }),
+        ),
+      ),
+    );
+    return { host, unmount: () => act(() => root.unmount()) };
+  };
+  const buttons = (host: HTMLElement, label: string) =>
+    [...host.querySelectorAll("button")].filter(b => b.textContent === label);
+
+  it("« Aperçu » demande l'affichage de la section choisie", () => {
+    const calls: (string | null)[] = [];
+    const { host, unmount } = mountBox({
+      previewSection: null,
+      onPreviewSection: (k: string | null) => calls.push(k),
+    });
+    const first = buttons(host, "Aperçu")[0];
+    act(() => first.click());
+    expect(calls).toEqual(["menu"]); // la section du secteur est en premier
+    unmount();
+  });
+
+  it("la section affichée propose « Fermer l'aperçu » et le ferme (null)", () => {
+    const calls: (string | null)[] = [];
+    const { host, unmount } = mountBox({
+      previewSection: "menu",
+      onPreviewSection: (k: string | null) => calls.push(k),
+    });
+    const close = buttons(host, "Fermer l’aperçu")[0];
+    expect(close.getAttribute("aria-pressed")).toBe("true");
+    act(() => close.click());
+    expect(calls).toEqual([null]);
+    unmount();
+  });
+
+  it("sans gestionnaire (hors éditeur), aucun bouton d'aperçu", () => {
+    const { host, unmount } = mountBox({});
+    expect(buttons(host, "Aperçu")).toHaveLength(0);
+    unmount();
+  });
+});
+
 /* ───── page complète avec un faux serveur ───── */
 describe("StickerSectionPage", () => {
   const original = api.defaults.adapter;

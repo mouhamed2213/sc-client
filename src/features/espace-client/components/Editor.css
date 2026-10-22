@@ -901,3 +901,9 @@
 .ed-stk-t code { font-size: 11px; opacity: .7; overflow-wrap: anywhere; }
 .ed-stk-rec { color: var(--acc, #d6b06a); }
 .ed-stk-a { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+
+/* Aperçu d'une section de sticker dans le téléphone */
+.ed-add-b.on { outline: 2px solid var(--acc, #d6b06a); }
+.edp-prev-bar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: center; margin: 0 0 10px; font-size: 13px; }
+.edp-prev-bar button { padding: 4px 10px; border-radius: 999px; border: 1px solid currentColor; background: none; color: inherit; cursor: pointer; }
+.device-in .ss { min-height: 100%; }

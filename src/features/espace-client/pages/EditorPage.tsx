@@ -1,7 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import Editor from "../components/Editor";
 import Fiche from "../components/Fiche";
+import StickerSectionView from "../components/sticker/StickerSectionView";
+import { resolveStickerSection, sectionTitle } from "../lib/stickerSections";
 import { useDashboardFiches } from "../hooks/useDashboardFiches";
 import { useFicheEditor } from "../hooks/useFicheEditor";
 import { useUnsavedGuard } from "../hooks/useUnsavedGuard";
@@ -61,6 +63,8 @@ function ApiIndex() {
 
 function FicheEditor({ id }: { id: string }) {
   const scroller = useRef<HTMLDivElement>(null);
+  // Section de sticker affichée dans l'aperçu téléphone (null = fiche complète).
+  const [previewSection, setPreviewSection] = useState<string | null>(null);
   const {
     draft,
     setDraft,
@@ -105,6 +109,11 @@ function FicheEditor({ id }: { id: string }) {
     );
 
   const locked = lockReason(draft);
+  // Onglet réellement ouvert par ce sticker (null si la section est masquée / supprimée : on affiche alors la fiche complète).
+  const resolved = previewSection
+    ? resolveStickerSection(draft, previewSection)
+    : null;
+  const previewTab = resolved && "tab" in resolved ? resolved.tab : null;
 
   return (
     <div className="edp-page">
@@ -178,14 +187,37 @@ function FicheEditor({ id }: { id: string }) {
 
           {/* fieldset disabled : désactive d'un coup tous les champs et boutons de l'éditeur quand la fiche est verrouillée */}
           <fieldset className="edp-lock" disabled={!!locked}>
-            <Editor fiche={draft} onChange={setDraft} />
+            <Editor
+              fiche={draft}
+              onChange={setDraft}
+              previewSection={previewSection}
+              onPreviewSection={setPreviewSection}
+            />
           </fieldset>
         </aside>
 
         <div className="demo-stage">
+          {previewTab && (
+            <p className="edp-prev-bar" role="status">
+              Aperçu du sticker « {sectionTitle(previewTab)} » (brouillon, non
+              enregistré)
+              <button onClick={() => setPreviewSection(null)}>
+                Revenir à la fiche
+              </button>
+            </p>
+          )}
           <div className="device">
             <div className="device-in" ref={scroller}>
-              <Fiche key={draft.slug} fiche={draft} scrollerRef={scroller} />
+              {previewSection ? (
+                <StickerSectionView
+                  key={`${draft.slug}-${previewSection}`}
+                  fiche={draft}
+                  section={previewSection}
+                  scrollerRef={scroller}
+                />
+              ) : (
+                <Fiche key={draft.slug} fiche={draft} scrollerRef={scroller} />
+              )}
             </div>
           </div>
         </div>
