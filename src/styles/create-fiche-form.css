@@ -187,6 +187,20 @@
   color: var(--mut);
   max-width: 60ch;
 }
+.cf-total {
+  margin: 8px 0 0;
+  color: var(--ink);
+  font-size: 17px;
+  font-weight: 800;
+}
+.cf-btn.cf-secondary {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+}
+.cf-btn.cf-secondary:hover:not(:disabled) {
+  background: #f6f4f0;
+}
 .cf-link {
   display: inline-block;
   font-weight: 700;

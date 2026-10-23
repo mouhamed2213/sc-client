@@ -1,11 +1,21 @@
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { FORMULES, PlanType } from "../../../../types";
+import { FORMULES } from "../../../../types";
+import type { PlanType } from "../../../../types";
 import { formatPrice } from "../../lib/formatPrice";
 import type { ApiFicheSummary } from "../../../../types";
+import { getPricingGrid } from "../../espaceClient.service";
 
 export function PlansPanel({ onClose }: { onClose: () => void }) {
   const [activePlan, setActivePlan] = useState<PlanType>("ESSENTIELLE");
   const current = FORMULES.find(plan => plan.id === activePlan) ?? FORMULES[0];
+  const { data: pricing, isError } = useQuery({
+    queryKey: ["clientPricing"],
+    queryFn: getPricingGrid,
+  });
+  const configured = pricing?.formules.find(
+    formula => formula.formule === activePlan.toLowerCase(),
+  );
   return (
     <section
       className="min-w-0 overflow-hidden rounded-2xl border border-[#e3dfd8] bg-white shadow-[0_6px_20px_rgba(0,0,0,0.05)]"
@@ -72,13 +82,53 @@ export function PlansPanel({ onClose }: { onClose: () => void }) {
             </div>
             <div className="text-right">
               <p className="text-xl font-semibold tracking-tight text-[#08090A]">
-                {formatPrice(current.price)}
+                {activePlan === "ESSENTIELLE"
+                  ? "Gratuite jusqu’à 3 fiches"
+                  : configured?.prixMensuelFcfa !== undefined &&
+                      configured.prixMensuelFcfa !== null
+                    ? `${formatPrice(configured.prixMensuelFcfa)} / mois`
+                    : "Tarif non configuré"}
               </p>
-              <p className="mt-1 text-xs text-[#6d665d]">{current.period}</p>
+              <p className="mt-1 text-xs text-[#6d665d]">
+                {activePlan === "ESSENTIELLE"
+                  ? pricing?.emplacements.prixUnitaireFcfa !== null &&
+                      pricing?.emplacements.prixUnitaireFcfa !== undefined
+                    ? `emplacement supplémentaire : ${formatPrice(pricing.emplacements.prixUnitaireFcfa)}`
+                    : "prix d’emplacement non configuré"
+                  : "prix et durées selon la configuration"}
+              </p>
             </div>
           </div>
           <div className="mt-5 rounded-xl bg-white/80 p-3 text-sm text-[#6d665d] ring-1 ring-[#eee9e1]">
-            Les détails et avantages de cette formule seront présentés ici.
+            {isError ? (
+              <p role="alert">Impossible de charger la grille tarifaire.</p>
+            ) : activePlan === "ESSENTIELLE" ? (
+              <p>Les places gratuites restantes sont déduites en priorité.</p>
+            ) : configured ? (
+              <>
+                <p className="font-semibold text-[#111111]">
+                  Durées proposées
+                </p>
+                <ul className="mt-2 flex flex-wrap gap-2">
+                  {configured.durees.map(item => (
+                    <li
+                      key={item.dureeMois}
+                      className="rounded-lg bg-[#f7f5f1] px-3 py-1.5"
+                    >
+                      {item.dureeMois} mois · remise {item.remisePct}%
+                    </li>
+                  ))}
+                </ul>
+                {configured.remises.length > 0 && (
+                  <p className="mt-3">
+                    Remises de quantité disponibles selon les paliers de
+                    commande.
+                  </p>
+                )}
+              </>
+            ) : (
+              <p>Cette formule n’est pas disponible actuellement.</p>
+            )}
           </div>
         </div>
       </div>

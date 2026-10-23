@@ -1,12 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { isAuthFailure } from "../../../lib/apiError";
+import { clearSession } from "../../../lib/session";
 import "../../../styles/dashboard.css";
 import {
   dashboardFichesKey,
   useDashboardFiches,
 } from "../hooks/useDashboardFiches";
-import { isAuthFailure } from "../../../lib/apiError";
-import { clearSession } from "../../../lib/session";
 import type { Health } from "../lib/dashboard";
 import {
   checks,
