@@ -268,6 +268,56 @@ export const defaultTabs = (formule: Formule): Onglet[] =>
     )
     .map(type => ({ id: `${formule}-${type}`, type, visible: true }));
 
+const isEssentialDefaultTabs = (tabs: Onglet[]) => {
+  const essentialTabs = defaultTabs("essentielle");
+  return (
+    tabs.length === essentialTabs.length &&
+    essentialTabs.every(expected => {
+      const actual = tabs.find(tab => tab.type === expected.type);
+      return (
+        actual !== undefined &&
+        actual.visible !== false &&
+        actual.titre === undefined &&
+        actual.contenu === undefined
+      );
+    })
+  );
+};
+
+export const hasLegacyEssentialTemplate = (
+  fiche: Pick<FicheRecord, "formule" | "data">,
+) =>
+  fiche.formule === "signature" &&
+  !!fiche.data.onglets?.length &&
+  isEssentialDefaultTabs(fiche.data.onglets);
+
+/** Onglets persistés, en remplaçant les seuls défauts Essentielle après un upgrade Signature. */
+export const configuredTabs = (
+  fiche: Pick<FicheRecord, "formule" | "data">
+): Onglet[] => {
+  const tabs = fiche.data.onglets;
+  if (!tabs?.length) return defaultTabs(fiche.formule);
+  if (hasLegacyEssentialTemplate(fiche)) return defaultTabs("signature");
+  return tabs;
+};
+
+/** Remplace l'ancien thème Essentielle tant que la fiche conserve ses onglets initiaux. */
+export const signatureHeader = (
+  fiche: Pick<FicheRecord, "formule" | "planCapabilities" | "data">,
+) => {
+  const header = fiche.data.entete;
+  if (
+    !hasLegacyEssentialTemplate(fiche) ||
+    !header ||
+    header.disposition !== "portrait" ||
+    header.taille !== "m" ||
+    header.theme !== "bleu" ||
+    header.couverture
+  )
+    return header;
+  return { ...header, theme: planOf(fiche).theme };
+};
+
 // Applique un modèle de métier sans jamais dépasser la formule
 export function applyTemplate(
   formule: Formule,
@@ -298,9 +348,7 @@ export function applyTemplate(
 // Onglets réellement affichés (respecte la formule, même si la donnée contient autre chose)
 export function visibleTabs(fiche: FicheRecord): Onglet[] {
   const plan = planOf(fiche);
-  let tabs = fiche.data.onglets?.length
-    ? fiche.data.onglets
-    : defaultTabs(fiche.formule);
+  let tabs = configuredTabs(fiche);
   tabs = tabs.filter(t => plan.tabs.includes(t.type));
   if (!plan.canReorder)
     tabs = [...tabs].sort(
