@@ -1,5 +1,9 @@
 import { useRef } from "react";
-import { planOf, signatureHeader } from "../../../lib/plans";
+import {
+  migrateLegacySignature,
+  planOf,
+  resolveHeader,
+} from "../../../lib/plans";
 import type { EnteteComplete, FicheData, FicheRecord } from "../../../types";
 import "./Editor.css";
 import AppearanceBox from "./editor/sections/AppearanceBox";
@@ -39,16 +43,26 @@ export default function Editor({
   // `latest` évite d'écraser une modification précédente quand deux mises à jour s'enchaînent.
   const latest = useRef(fiche);
   latest.current = fiche;
-  const up = (patch: Partial<FicheRecord>) =>
-    onChange({ ...latest.current, ...patch });
-  const upD = (patch: Partial<FicheData>) =>
-    onChange({ ...latest.current, data: { ...latest.current.data, ...patch } });
-  const entete: EnteteComplete = {
-    disposition: "portrait",
-    taille: "m",
-    theme: plan.theme,
-    ...(sig ? signatureHeader(fiche) : fiche.data.entete || {}),
+  // Fiche Signature encore à l'ancien modèle (upgrade) : la première modification enregistre aussi ce qui est
+  // affiché (onglets et entête Signature), pour que les choix suivants soient respectés.
+  const up = (patch: Partial<FicheRecord>) => {
+    const migration = migrateLegacySignature(latest.current);
+    onChange({
+      ...latest.current,
+      ...patch,
+      ...(migration ? { data: { ...latest.current.data, ...migration } } : {}),
+    });
   };
+  const upD = (patch: Partial<FicheData>) =>
+    onChange({
+      ...latest.current,
+      data: {
+        ...latest.current.data,
+        ...migrateLegacySignature(latest.current),
+        ...patch,
+      },
+    });
+  const entete: EnteteComplete = resolveHeader(fiche);
   const setE = (patch: Partial<EnteteComplete>) =>
     upD({ entete: { ...entete, ...patch } });
 

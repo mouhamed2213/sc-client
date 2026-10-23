@@ -1,4 +1,4 @@
-import { TAB_TYPES, planOf } from "../../../../lib/plans";
+import { TAB_TYPES, resolveHeader } from "../../../../lib/plans";
 import { ENV } from "../../../../lib/env";
 import type { FicheRecord, Onglet } from "../../../../types";
 import { sectionTitle } from "../../lib/stickerSections";
@@ -20,10 +20,7 @@ export default function StickerSection({
   fiche: FicheRecord;
   tab: Onglet;
 }) {
-  const plan = planOf(fiche);
-  const wanted =
-    fiche.formule === "signature" ? fiche.data.entete?.theme : undefined;
-  const theme = wanted && plan.themes.includes(wanted) ? wanted : plan.theme;
+  const { theme } = resolveHeader(fiche); // même règle que la fiche complète
   const name = fiche.entreprise || `${fiche.prenom} ${fiche.nom}`.trim();
   const fullUrl = `/f/${encodeURIComponent(fiche.slug)}`;
   const publicAppUrl = (ENV.VITE_PUBLIC_APP_URL || "").replace(/\/+$/, "");

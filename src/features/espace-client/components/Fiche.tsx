@@ -2,8 +2,8 @@ import type { RefObject } from "react";
 import { useEffect, useRef, useState } from "react";
 import { cssVars } from "../../../lib/css";
 import { ENV } from "../../../lib/env";
-import { planOf, signatureHeader, visibleTabs } from "../../../lib/plans";
-import type { EnteteComplete, FicheRecord } from "../../../types";
+import { resolveHeader, visibleTabs } from "../../../lib/plans";
+import type { FicheRecord } from "../../../types";
 import { downloadVCard } from "../lib/vcard";
 import { I } from "./fiche/Icon";
 import { QR } from "./fiche/QR";
@@ -42,15 +42,7 @@ export default function Fiche({
   ).replace(/\/+$/, "");
   const root = useRef<HTMLDivElement>(null);
   const [held, setHeld] = usePullQR(root, scrollerRef);
-  const plan = planOf(fiche);
-  const e: EnteteComplete = {
-    disposition: "portrait",
-    taille: "m",
-    theme: plan.theme,
-    ...(fiche.formule === "signature" ? signatureHeader(fiche) : {}),
-  };
-  if (!plan.headerLayouts.includes(e.disposition)) e.disposition = "portrait";
-  if (!plan.themes.includes(e.theme)) e.theme = plan.theme;
+  const e = resolveHeader(fiche);
   const tabs = visibleTabs(fiche);
   const [open, setOpen] = useState(
     () => new Set(tabs.slice(0, 1).map(t => t.id)),
