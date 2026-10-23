@@ -10,7 +10,7 @@ import {
   quoteSubscription,
   upgradeFichePlan,
 } from "../../espaceClient.service";
-import { getPlan } from "./PlansPanel";
+import { getPlan, subscriptionDurationLabel } from "./PlansPanel";
 
 const PLAN_RANK: Record<string, number> = {
   ESSENTIELLE: 0,
@@ -89,6 +89,7 @@ export function PaymentModal({
       paidPlan !== null &&
       selectedDuration !== undefined,
   });
+  const quoteLine = quoteQuery.data?.lignes[0];
 
   const upgradeMutation = useMutation({
     mutationFn: () => {
@@ -232,7 +233,11 @@ export function PaymentModal({
                 >
                   {durations.map(item => (
                     <option key={item.dureeMois} value={item.dureeMois}>
-                      {item.dureeMois} mois — remise {item.remisePct}%
+                      {subscriptionDurationLabel(item.dureeMois)} (
+                      {item.dureeMois} mois)
+                      {item.remisePct > 0
+                        ? ` — −${item.remisePct}%`
+                        : " — sans remise"}
                     </option>
                   ))}
                 </select>
@@ -256,11 +261,39 @@ export function PaymentModal({
               ) : quoteQuery.data ? (
                 <div className="rounded-xl bg-[#f4f1eb] px-4 py-3 text-sm text-[#4a443c]" aria-live="polite">
                   <p>
-                    Remise durée :{" "}
-                    {quoteQuery.data.lignes[0]?.remiseDureePct ?? 0}%
+                    Prix de base pour {selectedDuration} mois :{" "}
+                    {formatPrice(quoteQuery.data.totalSansRemiseFcfa)}
+                  </p>
+                  {quoteLine && (
+                    <>
+                      <p className="mt-1">
+                        Remise de durée ({quoteLine.remiseDureePct}%) : −
+                        {formatPrice(
+                          quoteLine.totalSansRemiseFcfa -
+                            quoteLine.prixApresDureeFcfa *
+                              quoteLine.quantite,
+                        )}
+                      </p>
+                      {quoteLine.remiseQuantitePct > 0 && (
+                        <p className="mt-1">
+                          Remise de quantité ({quoteLine.remiseQuantitePct}%) :
+                          −
+                          {formatPrice(
+                            quoteLine.prixApresDureeFcfa *
+                              quoteLine.quantite -
+                              quoteLine.totalFcfa,
+                          )}
+                        </p>
+                      )}
+                    </>
+                  )}
+                  <p className="mt-1 font-semibold text-[#08090A]">
+                    Économie totale :{" "}
+                    {formatPrice(quoteQuery.data.economieFcfa)}
                   </p>
                   <p className="mt-1 font-semibold text-[#08090A]">
-                    Total : {formatPrice(quoteQuery.data.totalFcfa)}
+                    Total pour cette fiche :{" "}
+                    {formatPrice(quoteQuery.data.totalFcfa)}
                   </p>
                 </div>
               ) : null}
@@ -305,7 +338,9 @@ export function PaymentModal({
                   : "Confirmer l’upgrade simulé"}
           </button>
           <p className="text-center text-xs leading-5 text-[#8d8a85]">
-            La formule sélectionnée sera appliquée à cette fiche après confirmation du serveur.
+            Pour cette fiche, le tarif tient compte de la durée et des remises
+            configurées. Les remises de quantité concernent les commandes
+            groupées. La formule sera activée après confirmation du serveur.
           </p>
         </div>
       </section>

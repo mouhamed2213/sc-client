@@ -1,10 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import type { ApiFicheSummary } from "../../../../types";
 import { FORMULES } from "../../../../types";
 import type { PlanType } from "../../../../types";
 import { formatPrice } from "../../lib/formatPrice";
-import type { ApiFicheSummary } from "../../../../types";
 import { getPricingGrid } from "../../espaceClient.service";
+
+export function subscriptionDurationLabel(months: number) {
+  if (months === 1) return "Mensuelle";
+  if (months === 3) return "Trimestrielle";
+  if (months === 12) return "Annuelle";
+  return `${months} mois`;
+}
 
 export function PlansPanel({ onClose }: { onClose: () => void }) {
   const [activePlan, setActivePlan] = useState<PlanType>("ESSENTIELLE");
@@ -16,6 +23,15 @@ export function PlansPanel({ onClose }: { onClose: () => void }) {
   const configured = pricing?.formules.find(
     formula => formula.formule === activePlan.toLowerCase(),
   );
+  const durationOptions =
+    configured?.durees.map(item => {
+      const prixAvantRemise =
+        (configured.prixMensuelFcfa ?? 0) * item.dureeMois;
+      const prixApresRemise = Math.round(
+        (prixAvantRemise * (100 - item.remisePct)) / 100,
+      );
+      return { ...item, prixAvantRemise, prixApresRemise };
+    }) ?? [];
   return (
     <section
       className="min-w-0 overflow-hidden rounded-2xl border border-[#e3dfd8] bg-white shadow-[0_6px_20px_rgba(0,0,0,0.05)]"
@@ -110,20 +126,43 @@ export function PlansPanel({ onClose }: { onClose: () => void }) {
                   Durées proposées
                 </p>
                 <ul className="mt-2 flex flex-wrap gap-2">
-                  {configured.durees.map(item => (
+                  {durationOptions.map(item => (
                     <li
                       key={item.dureeMois}
-                      className="rounded-lg bg-[#f7f5f1] px-3 py-1.5"
+                      className="rounded-lg bg-[#f7f5f1] px-3 py-2"
                     >
-                      {item.dureeMois} mois · remise {item.remisePct}%
+                      <span className="block font-medium text-[#111111]">
+                        {subscriptionDurationLabel(item.dureeMois)} ·{" "}
+                        {formatPrice(item.prixApresRemise)} par fiche
+                      </span>
+                      <span className="mt-1 block text-xs">
+                        {item.remisePct > 0
+                          ? `−${item.remisePct}% · économie de ${formatPrice(item.prixAvantRemise - item.prixApresRemise)}`
+                          : "Sans remise de durée"}
+                      </span>
                     </li>
                   ))}
                 </ul>
                 {configured.remises.length > 0 && (
-                  <p className="mt-3">
-                    Remises de quantité disponibles selon les paliers de
-                    commande.
-                  </p>
+                  <div className="mt-4">
+                    <p className="font-semibold text-[#111111]">
+                      Remises selon le nombre de fiches commandées
+                    </p>
+                    <ul className="mt-2 flex flex-wrap gap-2">
+                      {configured.remises.map(item => (
+                        <li
+                          key={item.quantiteMin}
+                          className="rounded-lg bg-rose-50 px-3 py-1.5 text-[#a30f23]"
+                        >
+                          Dès {item.quantiteMin} fiches · −{item.remisePct}%
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-2 text-xs">
+                      Ces remises s’appliquent aux commandes groupées, pas aux
+                      upgrades d’une fiche individuelle.
+                    </p>
+                  </div>
                 )}
               </>
             ) : (

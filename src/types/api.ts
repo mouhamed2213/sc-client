@@ -81,8 +81,11 @@ export interface ApiFicheSummary {
   enteteCouverture: string | null;
   createdAt: string;
   updatedAt: string;
-  /** Format actuellement renvoyé par le serveur dans la relation subscriptions. */
-  subscriptions?: { plan: { type: PlanType; nom?: string } }[];
+  /** Abonnement actif renvoyé dans la relation subscriptions du tableau de bord. */
+  subscriptions?: {
+    endsAt: string | null;
+    plan: { type: PlanType; nom?: string };
+  }[];
   /** Ancien format compatible avec les réponses déjà adaptées. */
   abonnementActif?: {
     endsAt: string | null;

@@ -20,6 +20,55 @@ export type SubscriptionKpi = {
   };
 };
 
+function getSubscriptionExpiry(fiche: ApiFicheSummary) {
+  const subscription = fiche.subscriptions?.[0];
+  const hasActiveSubscription = fiche.subscriptions
+    ? fiche.subscriptions.length > 0
+    : fiche.abonnementActif !== undefined && fiche.abonnementActif !== null;
+  if (!hasActiveSubscription)
+    return { dateLabel: "Aucun abonnement actif", remainingLabel: null };
+
+  const endsAt = subscription?.endsAt ?? fiche.abonnementActif?.endsAt ?? null;
+  if (endsAt === null)
+    return { dateLabel: "Sans échéance", remainingLabel: null };
+
+  const endDate = new Date(`${endsAt.slice(0, 10)}T00:00:00Z`);
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  const daysRemaining = Math.ceil(
+    (endDate.getTime() - today.getTime()) / 86_400_000,
+  );
+
+  return {
+    dateLabel: new Intl.DateTimeFormat("fr-FR", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      timeZone: "UTC",
+    }).format(endDate),
+    remainingLabel:
+      daysRemaining < 0
+        ? "Échéance dépassée"
+        : daysRemaining === 0
+          ? "Expire aujourd’hui"
+          : `${daysRemaining} jour${daysRemaining > 1 ? "s" : ""} restant${daysRemaining > 1 ? "s" : ""}`,
+  };
+}
+
+function SubscriptionExpiry({ fiche }: { fiche: ApiFicheSummary }) {
+  const expiry = getSubscriptionExpiry(fiche);
+  return (
+    <div className="text-sm text-[#6d665d]">
+      <span>{expiry.dateLabel}</span>
+      {expiry.remainingLabel && (
+        <span className="mt-1 block text-xs text-[#8d8a85]">
+          {expiry.remainingLabel}
+        </span>
+      )}
+    </div>
+  );
+}
+
 export default function SubscriptionPage() {
   const queryClient = useQueryClient();
   const [paymentFiche, setPaymentFiche] = useState<ApiFicheSummary | null>(null);
@@ -166,7 +215,7 @@ export default function SubscriptionPage() {
             ) : (
               <>
                 <div className="hidden overflow-x-auto md:block">
-                  <table className="w-full min-w-[780px] border-collapse text-left">
+                  <table className="w-full min-w-[900px] border-collapse text-left">
                     <thead className="bg-[#f7f5f1] text-[11px] font-semibold uppercase tracking-[0.1em] text-[#6d665d]">
                       <tr>
                         <th className="px-5 py-3.5">Fiche</th>
@@ -174,6 +223,7 @@ export default function SubscriptionPage() {
                         <th className="px-4 py-3.5">Secteur</th>
                         <th className="px-4 py-3.5">Téléphone</th>
                         <th className="px-4 py-3.5">WhatsApp</th>
+                        <th className="px-4 py-3.5">Échéance</th>
                         <th className="px-5 py-3.5 text-right">Action</th>
                       </tr>
                     </thead>
@@ -222,6 +272,9 @@ export default function SubscriptionPage() {
                           </td>
                           <td className="px-4 py-4 text-sm text-[#6d665d]">
                             {fiche.whatsapp || "—"}
+                          </td>
+                          <td className="px-4 py-4 text-sm text-[#6d665d]">
+                            <SubscriptionExpiry fiche={fiche} />
                           </td>
                           <td className="px-5 py-4 text-right">
                             <button
@@ -285,6 +338,12 @@ export default function SubscriptionPage() {
                           </p>
                         </div>
                       </div>
+                      <div className="mt-3 rounded-xl bg-[#f4f1eb] px-3 py-2">
+                        <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-[#8d8a85]">
+                          Échéance
+                        </p>
+                        <SubscriptionExpiry fiche={fiche} />
+                      </div>
                       <button
                         type="button"
                         onClick={() => setPaymentFiche(fiche)}
@@ -301,8 +360,8 @@ export default function SubscriptionPage() {
           {showPlans && <PlansPanel onClose={() => setShowPlans(false)} />}
         </div>
         <p className="mt-6 text-xs leading-5 text-[#8d8a85]">
-          Les prix affichés sont provisoires et pourront être ajustés dans la
-          configuration de cette page.
+          Les tarifs et remises affichés proviennent des paramètres actifs. Le
+          montant final est confirmé par le serveur avant validation.
         </p>
       </div>
       {paymentFiche && (

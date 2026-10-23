@@ -149,11 +149,19 @@ export async function quoteSubscription(
 ) {
   const response = await api.post<{
     totalFcfa: number;
+    totalSansRemiseFcfa: number;
+    economieFcfa: number;
     lignes: {
+      quantite: number;
+      dureeMois: number;
       prixMensuelFcfa: number;
       remiseDureePct: number;
+      remiseQuantitePct: number;
+      prixApresDureeFcfa: number;
       prixUnitaireFcfa: number;
       totalFcfa: number;
+      totalSansRemiseFcfa: number;
+      economieFcfa: number;
     }[];
   }>("client/parametres/commande/tarif", {
     lignes: [
