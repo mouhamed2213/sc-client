@@ -72,6 +72,14 @@ describe("filterFiches", () => {
       statut: "SUSPENDUE",
       subscriptions: subscription("ESSENTIELLE", null),
     }),
+    fiche({
+      id: 4,
+      slug: "fiche-4",
+      prenom: "Fiche",
+      nom: "en cours",
+      entreprise: null,
+      statut: "BROUILLON",
+    }),
   ];
 
   it("recherche par nom, entreprise ou activité sans tenir compte de la casse", () => {
@@ -114,6 +122,12 @@ describe("filterFiches", () => {
         status: "suspended",
       }).map(item => item.id),
     ).toEqual([3]);
+    expect(
+      filterFiches(fiches, {
+        ...DEFAULT_FICHE_LIST_FILTERS,
+        status: "draft",
+      }).map(item => item.id),
+    ).toEqual([4]);
   });
 });
 

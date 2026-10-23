@@ -18,6 +18,7 @@ import RegisterPage from "./features/auth/pages/RegisterPage";
 import { ResetPasswordPage } from "./features/auth/pages/ResetPasswordPage";
 import { VerifyMailPage } from "./features/auth/pages/VerifyMailPage";
 import DashboardPage from "./features/espace-client/pages/DashboardPage";
+import DraftsPage from "./features/espace-client/pages/DraftsPage";
 
 import ClientLayout from "./features/espace-client/layout/ClientLayout";
 import CallbackRequestsPage from "./features/espace-client/pages/CallbackRequestsPage";
@@ -151,6 +152,7 @@ export default function App() {
             <Route index element={<DashboardPage />} />
             <Route path="fiche/preview/:id" element={<FichePage />} />
             <Route path="demandes-rappel" element={<CallbackRequestsPage />} />
+            <Route path="brouillons" element={<DraftsPage />} />
             <Route path="editeur" element={<EditorPage />} />
             <Route path="editeur/:id" element={<EditorPage />} />
             <Route path="abonnements" element={<SubscriptionPage />} />

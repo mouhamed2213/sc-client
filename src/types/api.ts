@@ -10,7 +10,7 @@ import type { Plan, PlanType } from "./plan";
 */
 
 export type ApiSecteur = Uppercase<Secteur>;
-export type StatutFiche = "ACTIVE" | "SUSPENDUE";
+export type StatutFiche = "ACTIVE" | "SUSPENDUE" | "BROUILLON";
 export type PremierBouton = "WHATSAPP" | "APPEL" | "EMAIL";
 
 /** Un média de `data.galerie` tel que stocké (le type n'est pas restreint côté serveur). */

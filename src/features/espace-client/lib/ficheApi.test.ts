@@ -3,7 +3,12 @@ import { AxiosError } from "axios";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { api } from "../../../lib/api";
 import { FICHE_DATA_KEYS, type ApiFicheDetail } from "../../../types";
-import { fetchFiche, patchFiche, toFicheRecord } from "./ficheApi";
+import {
+  fetchFiche,
+  patchFiche,
+  publishFiche,
+  toFicheRecord,
+} from "./ficheApi";
 
 const dto = (over: Partial<ApiFicheDetail> = {}): ApiFicheDetail => ({
   id: 7,
@@ -131,6 +136,15 @@ describe("fetchFiche / patchFiche", () => {
       body: { prenom: "Awa" },
     });
     expect(f.slug).toBe("awa-ndiaye");
+  });
+
+  it("publie la fiche via la route dédiée", async () => {
+    const f = await publishFiche(7);
+    expect(seen[0]).toMatchObject({
+      method: "post",
+      url: "fiches/7/publish",
+    });
+    expect(f.statut).toBe("active");
   });
 
   it("laisse remonter l'AxiosError d'origine (lue par toFicheError)", async () => {

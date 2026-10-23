@@ -46,6 +46,7 @@ const PILL: Record<
   soon: { cls: "warn", text: d => `Expire dans ${d} j` },
   expired: { cls: "bad", text: () => "Expirée" },
   suspended: { cls: "bad", text: () => "Suspendue" },
+  draft: { cls: "warn", text: () => "Brouillon" },
 };
 
 function Skeleton() {
@@ -185,7 +186,9 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
   const missing = cur ? checks(cur).filter(c => !c.ok) : [];
   const pc = cur ? completion(cur) : 0;
   const scans = fiches.reduce((s, f) => s + f.scansTotal, 0);
-  const alerts = fiches.filter(f => health(f) !== "ok");
+  const alerts = fiches.filter(
+    f => !["ok", "draft"].includes(health(f)),
+  );
   const last = fiches.reduce(
     (a, f) => (f.updatedAt > a ? f.updatedAt : a),
     fiches[0].updatedAt
@@ -314,14 +317,16 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
                     </span>
                     <span className="db-act">
                       <button onClick={() => onView(f.slug)}>Voir</button>
-                      <a
-                        className="db-public-link"
-                        href={`/f/${encodeURIComponent(f.slug)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Fiche publique
-                      </a>
+                      {h !== "draft" && (
+                        <a
+                          className="db-public-link"
+                          href={`/f/${encodeURIComponent(f.slug)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Fiche publique
+                        </a>
+                      )}
                       <button className="pri" onClick={() => onEdit(f.id)}>
                         Modifier
                       </button>
@@ -368,11 +373,19 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
         {cur && <aside className="db-side" aria-label={`Détail de ${displayName(cur)}`}>
           <div className="db-card db-share">
             <h2>Partager</h2>
-            {/* <QR text={url} logo={cur.logo ?? undefined} size={150} /> */}
-            <code>{url.replace("https://", "")}</code>
-            <button className="db-copy" onClick={copy} aria-live="polite">
-              {copied ? "Lien copié ✓" : "Copier le lien"}
-            </button>
+            {health(cur) === "draft" ? (
+              <p className="db-sub2">
+                Publiez cette fiche depuis l’éditeur pour activer son lien
+                public.
+              </p>
+            ) : (
+              <>
+                <code>{url.replace("https://", "")}</code>
+                <button className="db-copy" onClick={copy} aria-live="polite">
+                  {copied ? "Lien copié ✓" : "Copier le lien"}
+                </button>
+              </>
+            )}
           </div>
           <div className="db-card">
             <h2>Compléter « {displayName(cur)} »</h2>

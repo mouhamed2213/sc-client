@@ -72,9 +72,12 @@ function FicheEditor({ id }: { id: string }) {
     loadError,
     dirty,
     saving,
+    publishing,
     saveError,
+    publishError,
     notes,
     save,
+    publish,
     reset,
     retry,
   } = useFicheEditor(id);
@@ -145,8 +148,27 @@ function FicheEditor({ id }: { id: string }) {
             >
               {saving ? "Enregistrement…" : "Enregistrer"}
             </button>
+            {draft.statut === "brouillon" && (
+              <button
+                className="edp-save"
+                onClick={() => void publish()}
+                disabled={dirty || saving || publishing || !!locked}
+                title={
+                  dirty
+                    ? "Enregistrez vos modifications avant de publier."
+                    : undefined
+                }
+              >
+                {publishing ? "Publication…" : "Publier"}
+              </button>
+            )}
           </div>
 
+          {draft.statut === "brouillon" && dirty && (
+            <p className="edp-note" role="status">
+              Enregistrez vos modifications avant de publier cette fiche.
+            </p>
+          )}
           {locked && (
             <p className="edp-note edp-warn" role="alert">
               {locked}
@@ -163,6 +185,11 @@ function FicheEditor({ id }: { id: string }) {
                     seront perdues)
                   </button>
                 </>
+              )}
+              {publishError && (
+                <p className="edp-note edp-warn" role="alert">
+                  {publishError.message}
+                </p>
               )}
               {saveError.issues.length > 0 && (
                 <ul className="edp-errors">

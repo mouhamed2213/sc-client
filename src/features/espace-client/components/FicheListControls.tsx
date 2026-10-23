@@ -63,6 +63,7 @@ export function FicheListControls({ filters, onChange }: FiltersProps) {
         <option value="active">Active</option>
         <option value="expired">Expirée</option>
         <option value="suspended">Suspendue</option>
+        <option value="draft">Brouillon</option>
       </select>
       <label className="sr-only" htmlFor="fiche-filter-sector">
         Filtrer par secteur

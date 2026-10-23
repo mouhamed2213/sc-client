@@ -17,7 +17,9 @@ export function useFicheEditor(key: string) {
   const [status, setStatus] = useState<Status>("loading");
   const [loadError, setLoadError] = useState<FicheError | null>(null);
   const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [saveError, setSaveError] = useState<FicheError | null>(null);
+  const [publishError, setPublishError] = useState<FicheError | null>(null);
   const [notes, setNotes] = useState<string[]>([]);
   const [attempt, setAttempt] = useState(0);
   const saved = useRef<FicheRecord | null>(null);
@@ -30,6 +32,7 @@ export function useFicheEditor(key: string) {
     setDraft(null);
     setLoadError(null);
     setSaveError(null);
+    setPublishError(null);
     setNotes([]);
     ficheSource
       .load(key)
@@ -76,6 +79,35 @@ export function useFicheEditor(key: string) {
     }
   }, [draft, saving, queryClient]);
 
+  const publish = useCallback(async () => {
+    if (
+      !draft ||
+      dirty ||
+      saving ||
+      publishing ||
+      draft.statut !== "brouillon"
+    )
+      return;
+    setPublishing(true);
+    setPublishError(null);
+    setNotes([]);
+    try {
+      const fiche = await ficheSource.publish(String(draft.id));
+      saved.current = fiche;
+      savedJson.current = JSON.stringify(fiche);
+      setDraft(fiche);
+      setNotes(["Votre fiche est publiée et son lien public est maintenant actif."]);
+      void queryClient.invalidateQueries({ queryKey: dashboardFichesKey });
+      void queryClient.invalidateQueries({
+        queryKey: ["fiche-preview", fiche.id],
+      });
+    } catch (error) {
+      setPublishError(toFicheError(error));
+    } finally {
+      setPublishing(false);
+    }
+  }, [draft, dirty, saving, publishing, queryClient]);
+
   const reset = useCallback(() => {
     if (saved.current) {
       setDraft(JSON.parse(savedJson.current) as FicheRecord);
@@ -93,9 +125,12 @@ export function useFicheEditor(key: string) {
     loadError,
     dirty,
     saving,
+    publishing,
     saveError,
+    publishError,
     notes,
     save,
+    publish,
     reset,
     retry,
   };

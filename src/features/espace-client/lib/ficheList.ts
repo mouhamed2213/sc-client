@@ -3,7 +3,7 @@ import type { ApiFicheSummary, ApiSecteur, PlanType } from "../../../types";
 export type FicheListFilters = {
   search: string;
   plan: "all" | PlanType;
-  status: "all" | "active" | "expired" | "suspended";
+  status: "all" | "active" | "expired" | "suspended" | "draft";
   sector: "all" | ApiSecteur;
   expiry: "all" | "expiring" | "expired" | "no-expiry";
 };
@@ -26,7 +26,8 @@ const getSubscription = (fiche: ApiFicheSummary) =>
 export function getFicheStatus(
   fiche: ApiFicheSummary,
   now = Date.now(),
-): "active" | "expired" | "suspended" {
+): "active" | "expired" | "suspended" | "draft" {
+  if (fiche.statut === "BROUILLON") return "draft";
   if (fiche.statut !== "ACTIVE") return "suspended";
   const subscription = getSubscription(fiche);
   if (subscription?.status && subscription.status !== "ACTIVE") return "expired";

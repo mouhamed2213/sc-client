@@ -34,9 +34,10 @@ export const subscriptionEndsAt = (f: ApiFicheSummary) =>
   f.latestSubscription?.endsAt ??
   f.abonnementActif?.endsAt;
 
-export type Health = "ok" | "soon" | "expired" | "suspended";
+export type Health = "ok" | "soon" | "expired" | "suspended" | "draft";
 /** Les fiches sans abonnement payant restent en ligne; une dernière échéance expirée reste signalée. */
 export function health(f: ApiFicheSummary, now = Date.now()): Health {
+  if (f.statut === "BROUILLON") return "draft";
   if (f.statut !== "ACTIVE") return "suspended";
   const subscription =
     f.subscriptions?.[0] ?? f.latestSubscription ?? f.abonnementActif;

@@ -106,7 +106,7 @@ function hasLocalMediaReference(value: unknown): boolean {
   return false;
 }
 
-import { fetchFiche, patchFiche } from "./ficheApi";
+import { fetchFiche, patchFiche, publishFiche } from "./ficheApi";
 import { planOf } from "../../../lib/plans";
 import { buildUpdatePayload, labelForChamp } from "./fichePayload";
 
@@ -128,6 +128,8 @@ export interface FicheSource {
   load(key: string): Promise<FicheRecord>;
   /** `previous` = dernière version enregistrée : sert à n'envoyer que ce qui a changé. */
   save(draft: FicheRecord, previous: FicheRecord): Promise<SaveResult>;
+  /** Publication explicite d’une fiche qui est déjà enregistrée. */
+  publish(key: string): Promise<FicheRecord>;
 }
 
 /* ───────────── Erreurs lisibles par l'interface ───────────── */
@@ -170,8 +172,15 @@ export function toFicheError(e: unknown): FicheError {
   if (status === 401) return new FicheError("Votre session a expiré. Reconnectez-vous pour continuer.", "auth", err?.code);
   if (status === 403) return new FicheError(msg ?? "Modification non autorisée.", "forbidden", err?.code);
   if (status === 404) return new FicheError("Fiche introuvable.", "notfound", err?.code);
-  if (status === 409 && err?.code === "CONFLIT_VERSION")
-    return new FicheError(msg ?? "Cette fiche a été modifiée ailleurs. Rechargez-la avant d'enregistrer.", "conflict", err.code);
+  if (status === 409)
+    return new FicheError(
+      msg ??
+        (err?.code === "CONFLIT_VERSION"
+          ? "Cette fiche a été modifiée ailleurs. Rechargez-la avant d'enregistrer."
+          : "L’état de cette fiche a changé. Rechargez-la puis réessayez."),
+      "conflict",
+      err?.code,
+    );
   if (status === 413) return new FicheError("Ce fichier est trop volumineux.", "upload", err?.code);
   if (status === 429) return new FicheError("Trop de requêtes. Patientez un instant puis réessayez.", "rate", err?.code);
   if (status === 400) return new FicheError("Certaines informations sont invalides.", "invalid", err?.code, issues);
@@ -218,6 +227,17 @@ export const apiSource: FicheSource = {
         ...(ignored.length ? [`Non enregistré (non inclus dans votre formule) : ${ignored.join(", ")}.`] : []),
       ];
       return { fiche, notes };
+    } catch (e) {
+      throw toFicheError(e);
+    }
+  },
+
+  async publish(key) {
+    const id = Number(key);
+    if (!Number.isInteger(id) || id <= 0)
+      throw new FicheError("Identifiant de fiche invalide.", "notfound");
+    try {
+      return await publishFiche(id);
     } catch (e) {
       throw toFicheError(e);
     }

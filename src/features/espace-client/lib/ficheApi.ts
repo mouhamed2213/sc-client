@@ -79,3 +79,11 @@ export async function patchFiche(
   );
   return toFicheRecord(res.data.fiche);
 }
+
+/** Publication explicite d’un brouillon (`POST /fiches/:id/publish`). */
+export async function publishFiche(id: number): Promise<FicheRecord> {
+  const res = await api.post<{ fiche: ApiFicheDetail }>(
+    `fiches/${id}/publish`,
+  );
+  return toFicheRecord(res.data.fiche);
+}
