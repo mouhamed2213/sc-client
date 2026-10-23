@@ -39,6 +39,43 @@ export type FichePurchaseInput = {
   dureeMois?: number;
 };
 
+export type CardRequest = {
+  id: number;
+  ficheId: number | null;
+  tier: string;
+  statut: "a_imprimer" | "imprimee" | "encodee" | "testee" | "livree" | "annulee";
+  nfcUrl: string;
+  adresseLivraison: string | null;
+  telephoneLivraison: string | null;
+  notesClient: string | null;
+  montantFcfa: number | null;
+  createdAt: string;
+};
+
+export type CardRequestInput = {
+  adresseLivraison: string;
+  telephoneLivraison: string;
+  notesClient?: string;
+};
+
+export async function getCardRequest(ficheId: number): Promise<CardRequest | null> {
+  const response = await api.get<{ carte: CardRequest | null }>(
+    `fiches/${ficheId}/card-request`,
+  );
+  return response.data.carte;
+}
+
+export async function createCardRequest(
+  ficheId: number,
+  input: CardRequestInput,
+): Promise<CardRequest> {
+  const response = await api.post<{ carte: CardRequest }>(
+    `fiches/${ficheId}/card-request`,
+    input,
+  );
+  return response.data.carte;
+}
+
 export type FichePurchaseQuote = {
   formule: string;
   nom: string;

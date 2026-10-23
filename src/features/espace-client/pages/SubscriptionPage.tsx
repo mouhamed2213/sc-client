@@ -1,8 +1,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ApiFicheSummary } from "../../../types";
 import { StatCard } from "../components/StatCard";
+import { CardRequestPanel } from "../components/CardRequestPanel";
 import {
   FicheListControls,
   FichePagination,
@@ -90,9 +91,18 @@ function SubscriptionExpiry({ fiche }: { fiche: ApiFicheSummary }) {
 export default function SubscriptionPage() {
   const queryClient = useQueryClient();
   const [paymentFiche, setPaymentFiche] = useState<ApiFicheSummary | null>(null);
+  const [cardFiche, setCardFiche] = useState<ApiFicheSummary | null>(null);
   const [showPlans, setShowPlans] = useState(false);
   const [filters, setFilters] = useState(DEFAULT_FICHE_LIST_FILTERS);
   const [page, setPage] = useState(1);
+  useEffect(() => {
+    if (!cardFiche) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setCardFiche(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [cardFiche]);
   // 1. Récupération des fiches
   const {
     data: fiches,
@@ -325,13 +335,28 @@ export default function SubscriptionPage() {
                             <SubscriptionExpiry fiche={fiche} />
                           </td>
                           <td className="px-5 py-4 text-right">
-                            <button
-                              type="button"
-                              onClick={() => setPaymentFiche(fiche)}
-                              className="whitespace-nowrap rounded-lg bg-[#08090A] px-3.5 py-2.5 text-xs font-semibold text-white transition hover:bg-[#c9142b] focus:outline-none focus:ring-2 focus:ring-[#EF1733] focus:ring-offset-2"
-                            >
-                              Voir formule <span aria-hidden="true">↗</span>
-                            </button>
+                            <div className="flex flex-col items-end gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setPaymentFiche(fiche)}
+                                className="whitespace-nowrap rounded-lg bg-[#08090A] px-3.5 py-2.5 text-xs font-semibold text-white transition hover:bg-[#c9142b] focus:outline-none focus:ring-2 focus:ring-[#EF1733] focus:ring-offset-2"
+                              >
+                                Voir formule <span aria-hidden="true">↗</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setCardFiche(fiche)}
+                                disabled={fiche.statut !== "ACTIVE" || !getPlan(fiche)}
+                                title={
+                                  fiche.statut !== "ACTIVE" || !getPlan(fiche)
+                                    ? "Une fiche publiée avec un abonnement actif est nécessaire."
+                                    : undefined
+                                }
+                                className="whitespace-nowrap rounded-lg border border-[#e3dfd8] bg-white px-3.5 py-2 text-xs font-semibold text-[#25221e] transition hover:border-[#08090A] hover:bg-[#f7f5f1] disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                Demander une carte
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -399,6 +424,14 @@ export default function SubscriptionPage() {
                       >
                         Voir formule <span aria-hidden="true">↗</span>
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => setCardFiche(fiche)}
+                        disabled={fiche.statut !== "ACTIVE" || !getPlan(fiche)}
+                        className="mt-2 w-full rounded-xl border border-[#e3dfd8] bg-white px-4 py-3 text-sm font-semibold text-[#25221e] transition hover:border-[#08090A] hover:bg-[#f7f5f1] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Demander une carte
+                      </button>
                     </article>
                   ))}
                 </div>
@@ -435,6 +468,39 @@ export default function SubscriptionPage() {
             });
           }}
         />
+      )}
+      {cardFiche && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="card-request-dialog-title"
+        >
+          <div className="my-auto w-full max-w-3xl rounded-2xl bg-[#f7f5f1] p-3 shadow-2xl sm:p-5">
+            <div className="flex items-center justify-between gap-4 px-2 pb-3">
+              <h2
+                id="card-request-dialog-title"
+                className="font-semibold text-[#111111]"
+              >
+                Demande de carte — {cardFiche.prenom} {cardFiche.nom}
+              </h2>
+              <button
+                type="button"
+                autoFocus
+                onClick={() => setCardFiche(null)}
+                aria-label="Fermer la demande de carte"
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-xl text-[#6d665d] hover:bg-white"
+              >
+                ×
+              </button>
+            </div>
+            <CardRequestPanel
+              ficheId={cardFiche.id}
+              formula={getPlan(cardFiche) ?? "essentielle"}
+              eligible={cardFiche.statut === "ACTIVE" && !!getPlan(cardFiche)}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

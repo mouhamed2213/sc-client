@@ -3,6 +3,7 @@ import { isAxiosError } from "axios";
 import { useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../../../lib/api";
+import { CardRequestPanel } from "../components/CardRequestPanel";
 import Fiche from "../components/Fiche";
 import { fetchFiche } from "../lib/ficheApi";
 import "./FicheStats.css";
@@ -249,11 +250,22 @@ function RappelsPanel({ ficheId }: { ficheId: number }) {
   );
 }
 
-function FicheDashboardPanel({ ficheId }: { ficheId: number }) {
-  const [activeSection, setActiveSection] = useState<"overview" | "rappels">("overview");
+function FicheDashboardPanel({
+  ficheId,
+  formula,
+  eligible,
+}: {
+  ficheId: number;
+  formula: string;
+  eligible: boolean;
+}) {
+  const [activeSection, setActiveSection] = useState<
+    "overview" | "rappels" | "carte"
+  >("overview");
   const sections = [
     { id: "overview" as const, label: "Statistiques", description: "Passages et sources" },
     { id: "rappels" as const, label: "Demandes de rappel", description: "Coordonnées reçues" },
+    { id: "carte" as const, label: "Carte", description: "Carte physique NFC" },
   ];
 
   return (
@@ -280,8 +292,14 @@ function FicheDashboardPanel({ ficheId }: { ficheId: number }) {
       </nav>
       {activeSection === "overview" ? (
         <PassageStatsPanel ficheId={ficheId} />
-      ) : (
+      ) : activeSection === "rappels" ? (
         <RappelsPanel ficheId={ficheId} />
+      ) : (
+        <CardRequestPanel
+          ficheId={ficheId}
+          formula={formula}
+          eligible={eligible}
+        />
       )}
     </div>
   );
@@ -378,7 +396,11 @@ export function FichePage() {
             </div>
           </div>
         </div>
-        <FicheDashboardPanel ficheId={fiche.id} />
+        <FicheDashboardPanel
+          ficheId={fiche.id}
+          formula={fiche.formule}
+          eligible={fiche.statut === "ACTIVE" && !fiche.expiree}
+        />
       </div>
     </section>
   );

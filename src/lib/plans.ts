@@ -268,6 +268,33 @@ export const defaultTabs = (formule: Formule): Onglet[] =>
     )
     .map(type => ({ id: `${formule}-${type}`, type, visible: true }));
 
+const isEssentialDefaultTabs = (tabs: Onglet[]) => {
+  const essentialTabs = defaultTabs("essentielle");
+  return (
+    tabs.length === essentialTabs.length &&
+    essentialTabs.every(expected => {
+      const actual = tabs.find(tab => tab.type === expected.type);
+      return (
+        actual !== undefined &&
+        actual.visible !== false &&
+        actual.titre === undefined &&
+        actual.contenu === undefined
+      );
+    })
+  );
+};
+
+/** Onglets persistés, en remplaçant les seuls défauts Essentielle après un upgrade Signature. */
+export const configuredTabs = (
+  fiche: Pick<FicheRecord, "formule" | "data">
+): Onglet[] => {
+  const tabs = fiche.data.onglets;
+  if (!tabs?.length) return defaultTabs(fiche.formule);
+  if (fiche.formule === "signature" && isEssentialDefaultTabs(tabs))
+    return defaultTabs("signature");
+  return tabs;
+};
+
 // Applique un modèle de métier sans jamais dépasser la formule
 export function applyTemplate(
   formule: Formule,
@@ -298,9 +325,7 @@ export function applyTemplate(
 // Onglets réellement affichés (respecte la formule, même si la donnée contient autre chose)
 export function visibleTabs(fiche: FicheRecord): Onglet[] {
   const plan = planOf(fiche);
-  let tabs = fiche.data.onglets?.length
-    ? fiche.data.onglets
-    : defaultTabs(fiche.formule);
+  let tabs = configuredTabs(fiche);
   tabs = tabs.filter(t => plan.tabs.includes(t.type));
   if (!plan.canReorder)
     tabs = [...tabs].sort(
