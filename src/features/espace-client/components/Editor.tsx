@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { planOf } from "../../../lib/plans";
+import { planOf, signatureHeader } from "../../../lib/plans";
 import type { EnteteComplete, FicheData, FicheRecord } from "../../../types";
 import "./Editor.css";
 import AppearanceBox from "./editor/sections/AppearanceBox";
@@ -47,7 +47,7 @@ export default function Editor({
     disposition: "portrait",
     taille: "m",
     theme: plan.theme,
-    ...(fiche.data.entete || {}),
+    ...(sig ? signatureHeader(fiche) : fiche.data.entete || {}),
   };
   const setE = (patch: Partial<EnteteComplete>) =>
     upD({ entete: { ...entete, ...patch } });

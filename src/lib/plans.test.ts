@@ -1,20 +1,32 @@
 import { describe, expect, it } from "vitest";
-import { configuredTabs, defaultTabs, visibleTabs } from "./plans";
+import {
+  configuredTabs,
+  defaultTabs,
+  signatureHeader,
+  visibleTabs,
+} from "./plans";
 import { FICHES } from "../test/fixtures/fiches";
 
-describe("configuredTabs", () => {
-  it("uses Signature defaults when an upgraded fiche still has untouched Essentielle defaults", () => {
+const essentialDefaults = [
+  { id: "one", type: "presentation" as const, visible: true },
+  { id: "two", type: "reseaux" as const, visible: true },
+  { id: "three", type: "localisation" as const, visible: true },
+];
+
+describe("Signature template fallback", () => {
+  it("uses Signature blocks and theme when an upgraded fiche still has Essentielle defaults", () => {
     const base = FICHES[0];
     const fiche = {
       ...base,
       formule: "signature" as const,
       data: {
         ...base.data,
-        onglets: [
-          { id: "a", type: "presentation" as const, visible: true },
-          { id: "b", type: "reseaux" as const, visible: true },
-          { id: "c", type: "localisation" as const, visible: true },
-        ],
+        onglets: essentialDefaults,
+        entete: {
+          disposition: "portrait" as const,
+          taille: "m" as const,
+          theme: "bleu" as const,
+        },
       },
     };
 
@@ -22,9 +34,10 @@ describe("configuredTabs", () => {
       defaultTabs("signature").map(tab => tab.type),
     );
     expect(visibleTabs(fiche).map(tab => tab.type)).toContain("galerie");
+    expect(signatureHeader(fiche)?.theme).toBe("or");
   });
 
-  it("preserves customized tabs on an upgraded Signature fiche", () => {
+  it("preserves customized blocks and header choices", () => {
     const base = FICHES[0];
     const customTabs = [
       { id: "custom", type: "presentation" as const, visible: true, titre: "À propos" },
@@ -33,7 +46,15 @@ describe("configuredTabs", () => {
     const fiche = {
       ...base,
       formule: "signature" as const,
-      data: { ...base.data, onglets: customTabs },
+      data: {
+        ...base.data,
+        onglets: customTabs,
+        entete: {
+          disposition: "duo" as const,
+          taille: "l" as const,
+          theme: "bleu" as const,
+        },
+      },
     };
 
     expect(configuredTabs(fiche)).toBe(customTabs);
@@ -41,5 +62,6 @@ describe("configuredTabs", () => {
       "presentation",
       "liens",
     ]);
+    expect(signatureHeader(fiche)).toEqual(fiche.data.entete);
   });
 });

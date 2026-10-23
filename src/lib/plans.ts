@@ -284,15 +284,38 @@ const isEssentialDefaultTabs = (tabs: Onglet[]) => {
   );
 };
 
+export const hasLegacyEssentialTemplate = (
+  fiche: Pick<FicheRecord, "formule" | "data">,
+) =>
+  fiche.formule === "signature" &&
+  !!fiche.data.onglets?.length &&
+  isEssentialDefaultTabs(fiche.data.onglets);
+
 /** Onglets persistés, en remplaçant les seuls défauts Essentielle après un upgrade Signature. */
 export const configuredTabs = (
   fiche: Pick<FicheRecord, "formule" | "data">
 ): Onglet[] => {
   const tabs = fiche.data.onglets;
   if (!tabs?.length) return defaultTabs(fiche.formule);
-  if (fiche.formule === "signature" && isEssentialDefaultTabs(tabs))
-    return defaultTabs("signature");
+  if (hasLegacyEssentialTemplate(fiche)) return defaultTabs("signature");
   return tabs;
+};
+
+/** Remplace l'ancien thème Essentielle tant que la fiche conserve ses onglets initiaux. */
+export const signatureHeader = (
+  fiche: Pick<FicheRecord, "formule" | "planCapabilities" | "data">,
+) => {
+  const header = fiche.data.entete;
+  if (
+    !hasLegacyEssentialTemplate(fiche) ||
+    !header ||
+    header.disposition !== "portrait" ||
+    header.taille !== "m" ||
+    header.theme !== "bleu" ||
+    header.couverture
+  )
+    return header;
+  return { ...header, theme: planOf(fiche).theme };
 };
 
 // Applique un modèle de métier sans jamais dépasser la formule
