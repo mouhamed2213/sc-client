@@ -1,8 +1,12 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { ApiFicheSummary } from "../../../types";
 import { StatCard } from "../components/StatCard";
+import {
+  FicheListControls,
+  FichePagination,
+} from "../components/FicheListControls";
 import { PaymentModal } from "../components/subscription/PaymentModal";
 import {
   getPlan,
@@ -11,6 +15,12 @@ import {
   PlansPanel,
 } from "../components/subscription/PlansPanel";
 import { getDashboardFiche, getKpi } from "../espaceClient.service";
+import {
+  DEFAULT_FICHE_LIST_FILTERS,
+  filterFiches,
+  pageFiches,
+  type FicheListFilters,
+} from "../lib/ficheList";
 
 export type SubscriptionKpi = {
   data: {
@@ -21,16 +31,24 @@ export type SubscriptionKpi = {
 };
 
 function getSubscriptionExpiry(fiche: ApiFicheSummary) {
-  const subscription = fiche.subscriptions?.[0];
-  const hasActiveSubscription = fiche.subscriptions
-    ? fiche.subscriptions.length > 0
-    : fiche.abonnementActif !== undefined && fiche.abonnementActif !== null;
-  if (!hasActiveSubscription)
+  const subscription =
+    fiche.subscriptions?.[0] ??
+    fiche.latestSubscription ??
+    fiche.abonnementActif;
+  if (!subscription)
     return { dateLabel: "Aucun abonnement actif", remainingLabel: null };
 
-  const endsAt = subscription?.endsAt ?? fiche.abonnementActif?.endsAt ?? null;
+  const endsAt = subscription.endsAt;
   if (endsAt === null)
-    return { dateLabel: "Sans échéance", remainingLabel: null };
+    return {
+      dateLabel:
+        subscription.status === "CANCELED"
+          ? "Abonnement annulé"
+          : subscription.status === "EXPIRED"
+            ? "Abonnement expiré"
+            : "Sans échéance",
+      remainingLabel: null,
+    };
 
   const endDate = new Date(`${endsAt.slice(0, 10)}T00:00:00Z`);
   const today = new Date();
@@ -73,6 +91,8 @@ export default function SubscriptionPage() {
   const queryClient = useQueryClient();
   const [paymentFiche, setPaymentFiche] = useState<ApiFicheSummary | null>(null);
   const [showPlans, setShowPlans] = useState(false);
+  const [filters, setFilters] = useState(DEFAULT_FICHE_LIST_FILTERS);
+  const [page, setPage] = useState(1);
   // 1. Récupération des fiches
   const {
     data: fiches,
@@ -87,6 +107,15 @@ export default function SubscriptionPage() {
   });
 
   const ficheCount = fiches?.length ?? 0;
+  const filteredFiches = useMemo(
+    () => filterFiches(fiches ?? [], filters),
+    [fiches, filters],
+  );
+  const pageData = pageFiches(filteredFiches, page);
+  const updateFilters = (next: FicheListFilters) => {
+    setFilters(next);
+    setPage(1);
+  };
 
   // 2. Récupération des KPIs
   const { data: kpi } = useQuery<SubscriptionKpi>({
@@ -214,6 +243,25 @@ export default function SubscriptionPage() {
               </div>
             ) : (
               <>
+                <FicheListControls
+                  filters={filters}
+                  onChange={updateFilters}
+                />
+                {pageData.items.length === 0 ? (
+                  <div className="px-6 py-12 text-center">
+                    <p className="text-sm text-[#6d665d]">
+                      Aucune fiche ne correspond à ces filtres.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => updateFilters(DEFAULT_FICHE_LIST_FILTERS)}
+                      className="mt-3 rounded-lg border border-[#e3dfd8] bg-white px-3 py-2 text-sm font-semibold text-[#25221e]"
+                    >
+                      Effacer les filtres
+                    </button>
+                  </div>
+                ) : (
+                <>
                 <div className="hidden overflow-x-auto md:block">
                   <table className="w-full min-w-[900px] border-collapse text-left">
                     <thead className="bg-[#f7f5f1] text-[11px] font-semibold uppercase tracking-[0.1em] text-[#6d665d]">
@@ -228,7 +276,7 @@ export default function SubscriptionPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {fiches.map(fiche => (
+                      {pageData.items.map(fiche => (
                         <tr
                           key={fiche.id}
                           className="transition hover:bg-transparent"
@@ -291,7 +339,7 @@ export default function SubscriptionPage() {
                   </table>
                 </div>
                 <div className="divide-y divide-slate-100 md:hidden">
-                  {fiches.map(fiche => (
+                  {pageData.items.map(fiche => (
                     <article key={fiche.id} className="p-4">
                       <div className="flex items-start gap-3">
                         {fiche.logo ? (
@@ -354,6 +402,16 @@ export default function SubscriptionPage() {
                     </article>
                   ))}
                 </div>
+                </>
+                )}
+                <FichePagination
+                  currentPage={pageData.currentPage}
+                  pageCount={pageData.pageCount}
+                  startIndex={pageData.startIndex}
+                  endIndex={pageData.endIndex}
+                  total={filteredFiches.length}
+                  onPageChange={setPage}
+                />
               </>
             )}
           </section>

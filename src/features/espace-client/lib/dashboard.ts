@@ -29,11 +29,19 @@ export const daysLeft = (
 ): number | null =>
   iso ? Math.ceil((new Date(iso).getTime() - now) / 86_400_000) : null
 
+export const subscriptionEndsAt = (f: ApiFicheSummary) =>
+  f.subscriptions?.[0]?.endsAt ??
+  f.latestSubscription?.endsAt ??
+  f.abonnementActif?.endsAt;
+
 export type Health = "ok" | "soon" | "expired" | "suspended";
-/** L'échéance ne compte que si le serveur renvoie abonnementActif ; sinon la fiche est simplement « en ligne ». */
+/** Les fiches sans abonnement payant restent en ligne; une dernière échéance expirée reste signalée. */
 export function health(f: ApiFicheSummary, now = Date.now()): Health {
   if (f.statut !== "ACTIVE") return "suspended";
-  const d = daysLeft(f.abonnementActif?.endsAt, now);
+  const subscription =
+    f.subscriptions?.[0] ?? f.latestSubscription ?? f.abonnementActif;
+  if (subscription?.status && subscription.status !== "ACTIVE") return "expired";
+  const d = daysLeft(subscriptionEndsAt(f), now);
   return d === null ? "ok" : d < 0 ? "expired" : d <= 30 ? "soon" : "ok";
 }
 

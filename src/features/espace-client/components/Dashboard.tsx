@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { isAuthFailure } from "../../../lib/apiError";
 import { clearSession } from "../../../lib/session";
 import "../../../styles/dashboard.css";
@@ -17,14 +17,20 @@ import {
   health,
   publicUrl,
   SECTEUR_LABEL,
+  subscriptionEndsAt,
 } from "../lib/dashboard";
+import {
+  DEFAULT_FICHE_LIST_FILTERS,
+  filterFiches,
+  pageFiches,
+  type FicheListFilters,
+} from "../lib/ficheList";
+import { FicheListControls, FichePagination } from "./FicheListControls";
 import CreateFicheForm from "../pages/CreateFicheForm";
 
 /*
   Tableau de bord de l'espace client. Données : GET client/dashboard/fiches (TanStack Query, hook useDashboardFiches).
-  ⚠️ Le serveur ne renvoie pas encore la formule, l'échéance ni le contenu des blocs : le tableau de bord n'affiche donc
-  que ce qui existe (état, passages, complétude de la fiche). Dès que `abonnementActif` est ajouté à la réponse,
-  la formule et les alertes d'échéance s'affichent d'elles-mêmes.
+  La réponse fournit les abonnements, l'échéance et les données utilisées pour les indicateurs de fiche.
 */
 interface Props {
   user: { name: string };
@@ -69,6 +75,17 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
   const [sel, setSel] = useState<string>();
   const [copied, setCopied] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [filters, setFilters] = useState(DEFAULT_FICHE_LIST_FILTERS);
+  const [page, setPage] = useState(1);
+  const filteredFiches = useMemo(
+    () => filterFiches(fiches ?? [], filters),
+    [fiches, filters],
+  );
+  const pageData = pageFiches(filteredFiches, page);
+  const updateFilters = (next: FicheListFilters) => {
+    setFilters(next);
+    setPage(1);
+  };
   const queryClient = useQueryClient();
 
   const handleCreated = () => {
@@ -162,10 +179,11 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
       </div>
     );
 
-  const cur = fiches.find(f => f.slug === sel) ?? fiches[0];
-  const url = publicUrl(cur.slug),
-    missing = checks(cur).filter(c => !c.ok),
-    pc = completion(cur);
+  const cur =
+    pageData.items.find(f => f.slug === sel) ?? pageData.items[0];
+  const url = cur ? publicUrl(cur.slug) : "";
+  const missing = cur ? checks(cur).filter(c => !c.ok) : [];
+  const pc = cur ? completion(cur) : 0;
   const scans = fiches.reduce((s, f) => s + f.scansTotal, 0);
   const alerts = fiches.filter(f => health(f) !== "ok");
   const last = fiches.reduce(
@@ -202,7 +220,7 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
           {alerts.map(f => (
             <li key={f.id} className={PILL[health(f)].cls}>
               <b>{displayName(f)}</b> —{" "}
-              {PILL[health(f)].text(daysLeft(f.abonnementActif?.endsAt))}.{" "}
+              {PILL[health(f)].text(daysLeft(subscriptionEndsAt(f)))}.{" "}
               <a href="#renouveler">Renouveler</a>
             </li>
           ))}
@@ -236,8 +254,20 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
       <div className="db-grid">
         <section aria-label="Mes fiches">
           <h2>Mes fiches</h2>
+          <FicheListControls filters={filters} onChange={updateFilters} />
+          {pageData.items.length === 0 ? (
+            <div className="db-state">
+              <p>Aucune fiche ne correspond à ces filtres.</p>
+              <button
+                className="db-copy"
+                onClick={() => updateFilters(DEFAULT_FICHE_LIST_FILTERS)}
+              >
+                Effacer les filtres
+              </button>
+            </div>
+          ) : (
           <ul className="db-list">
-            {fiches.map(f => {
+            {pageData.items.map(f => {
               const h = health(f),
                 c = completion(f);
               return (
@@ -264,14 +294,19 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
                   </button>
                   <div className="db-row">
                     <span className={`db-pill ${PILL[h].cls}`}>
-                      {PILL[h].text(daysLeft(f.abonnementActif?.endsAt))}
+                      {PILL[h].text(daysLeft(subscriptionEndsAt(f)))}
                     </span>
-                    {f.abonnementActif && (
+                    {(f.subscriptions?.[0] ?? f.abonnementActif) && (
                       <span className="db-plan">
-                        {f.abonnementActif.plan.nom}
+                        {(f.subscriptions?.[0] ?? f.abonnementActif)?.plan
+                          .nom ??
+                          (f.subscriptions?.[0] ?? f.abonnementActif)?.plan
+                            .type}
                       </span>
                     )}
-                    {f.enLigneSeule && !f.abonnementActif && (
+                    {f.enLigneSeule &&
+                      !(f.subscriptions?.[0] ??
+                        f.abonnementActif) && (
                       <span className="db-plan free">Créée gratuitement</span>
                     )}
                     <span className="db-scans">
@@ -302,7 +337,21 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
               );
             })}
           </ul>
-          {fiches.some(f => f.enLigneSeule && !f.abonnementActif) && (
+          )}
+          <FichePagination
+            currentPage={pageData.currentPage}
+            pageCount={pageData.pageCount}
+            startIndex={pageData.startIndex}
+            endIndex={pageData.endIndex}
+            total={filteredFiches.length}
+            onPageChange={setPage}
+          />
+          {fiches.some(
+            f =>
+              f.enLigneSeule &&
+              !f.subscriptions?.length &&
+              !f.abonnementActif,
+          ) && (
             <aside className="db-up" id="upgrade">
               <div>
                 <b>Allez plus loin avec une formule Pro ou Signature</b>
@@ -316,7 +365,7 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
           )}
         </section>
 
-        <aside className="db-side" aria-label={`Détail de ${displayName(cur)}`}>
+        {cur && <aside className="db-side" aria-label={`Détail de ${displayName(cur)}`}>
           <div className="db-card db-share">
             <h2>Partager</h2>
             {/* <QR text={url} logo={cur.logo ?? undefined} size={150} /> */}
@@ -346,7 +395,7 @@ export default function Dashboard({ user, onEdit, onView }: Props) {
               </button>
             )}
           </div>
-        </aside>
+        </aside>}
       </div>
       {createDialog}
     </div>
