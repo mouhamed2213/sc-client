@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams, useSearchParams } from "react-router-dom";
 import Fiche from "../../espace-client/components/Fiche";
 import PublicFicheState from "../components/PublicFicheState";
+import { useIsFicheOwner } from "../hooks/useIsFicheOwner";
 import { usePassage, type PassageSource } from "../hooks/usePassage";
 import { fetchFiche } from "../lib/ficheApi";
 import "./FicheStats.css";
@@ -26,6 +27,8 @@ export default function PublicFichePage() {
   });
 
   usePassage(slug, source, Boolean(ficheQuery.data));
+  // Le QR et le bouton « NFC · QR » sont des outils du propriétaire : un visiteur ne les voit jamais.
+  const isOwner = useIsFicheOwner(slug);
 
   if (ficheQuery.isPending) return <PublicFicheState loading />;
   if (ficheQuery.isError || !ficheQuery.data)
@@ -37,6 +40,7 @@ export default function PublicFichePage() {
         key={ficheQuery.data.id}
         fiche={ficheQuery.data}
         scrollerRef={scrollerRef}
+        ownerTools={isOwner}
       />
     </main>
   );
