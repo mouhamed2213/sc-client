@@ -4,6 +4,8 @@
 import type {
   Disposition,
   Entete,
+  EnteteComplete,
+  FicheData,
   FicheRecord,
   Formule,
   Onglet,
@@ -284,12 +286,19 @@ const isEssentialDefaultTabs = (tabs: Onglet[]) => {
   );
 };
 
+/**
+ * Fiche Signature dont la configuration enregistrée est encore celle de l'Essentielle (upgrade de formule).
+ * Une fiche déjà migrée (voir `migrateLegacySignature`) est reconnue à ses onglets `signature-…` (identifiants
+ * déterministes de `defaultTabs`) : une page Signature volontairement réduite à ces trois onglets n'est donc
+ * pas prise pour un ancien modèle.
+ */
 export const hasLegacyEssentialTemplate = (
   fiche: Pick<FicheRecord, "formule" | "data">,
 ) =>
   fiche.formule === "signature" &&
   !!fiche.data.onglets?.length &&
-  isEssentialDefaultTabs(fiche.data.onglets);
+  isEssentialDefaultTabs(fiche.data.onglets) &&
+  !fiche.data.onglets.some(tab => tab.id.startsWith("signature-"));
 
 /** Onglets persistés, en remplaçant les seuls défauts Essentielle après un upgrade Signature. */
 export const configuredTabs = (
@@ -317,6 +326,38 @@ export const signatureHeader = (
     return header;
   return { ...header, theme: planOf(fiche).theme };
 };
+
+/**
+ * Entête réellement affiché (disposition, taille, thème) : UNE seule règle pour la fiche, l'éditeur et la page
+ * sticker. Hors Signature, l'entête enregistré est ignoré ; les valeurs interdites par la formule sont corrigées.
+ */
+export function resolveHeader(
+  fiche: Pick<FicheRecord, "formule" | "planCapabilities" | "data">,
+): EnteteComplete {
+  const plan = planOf(fiche);
+  const header: EnteteComplete = {
+    disposition: "portrait",
+    taille: "m",
+    theme: plan.theme,
+    ...(fiche.formule === "signature" ? signatureHeader(fiche) : {}),
+  };
+  if (!plan.headerLayouts.includes(header.disposition)) header.disposition = "portrait";
+  if (!plan.themes.includes(header.theme)) header.theme = plan.theme;
+  return header;
+}
+
+/**
+ * À appliquer à la PREMIÈRE modification d'une fiche Signature encore à l'ancien modèle : enregistre ce qui est
+ * affiché (onglets Signature, entête Signature). La fiche cesse alors d'être « ancienne » et ses choix suivants
+ * sont respectés (par exemple le thème bleu, identique à l'ancien thème par défaut).
+ */
+export function migrateLegacySignature(
+  fiche: FicheRecord,
+): Pick<FicheData, "onglets" | "entete"> | null {
+  if (!hasLegacyEssentialTemplate(fiche)) return null;
+  const entete = signatureHeader(fiche);
+  return { onglets: defaultTabs("signature"), ...(entete ? { entete } : {}) };
+}
 
 // Applique un modèle de métier sans jamais dépasser la formule
 export function applyTemplate(
