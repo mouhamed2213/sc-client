@@ -25,6 +25,20 @@ lib/fichePayload.ts       Brouillon → corps du PATCH (n'envoie que les différ
 lib/ficheSource.ts        Source de données de l'éditeur (API : GET / PATCH fiches/:id)
 ```
 
+## Outils du propriétaire (QR et « NFC · QR »)
+
+Le QR code, le bouton « NFC · QR » et le geste « tirer pour le QR » servent au **propriétaire** pour qu'une personne
+scanne sa fiche. Une personne qui ouvre la fiche en la scannant ne les voit pas.
+
+- `Fiche` reçoit `ownerTools` (**faux par défaut** : un oubli ne montre jamais l'outil à un visiteur). Le geste est
+  désactivé aussi (`usePullQR(…, enabled)` n'installe alors aucun écouteur).
+- Activé pour : l'aperçu téléphone de l'éditeur, la page propriétaire (`FichePage`) et la page publique **si**
+  `useIsFicheOwner(slug)` est vrai : session ouverte ET fiche présente dans `client/dashboard/fiches`.
+- Jamais activé : page sticker (`/s/…`), y compris son repli sur la fiche complète.
+- Un visiteur anonyme ne déclenche aucune requête vers l'espace client.
+- Limite : un propriétaire **non connecté** sur son téléphone voit la vue visiteur. Si l'API indiquait la propriété
+  dans la réponse publique (`isOwner`), seul `hooks/useIsFicheOwner.ts` changerait.
+
 ## Stickers par section
 
 Un sticker (QR) peut ouvrir **une seule section** de la fiche au lieu de la fiche entière : `/s/:slug/:section`

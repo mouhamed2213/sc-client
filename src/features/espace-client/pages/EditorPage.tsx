@@ -243,7 +243,12 @@ function FicheEditor({ id }: { id: string }) {
                   scrollerRef={scroller}
                 />
               ) : (
-                <Fiche key={draft.slug} fiche={draft} scrollerRef={scroller} />
+                <Fiche
+                  key={draft.slug}
+                  fiche={draft}
+                  scrollerRef={scroller}
+                  ownerTools
+                />
               )}
             </div>
           </div>

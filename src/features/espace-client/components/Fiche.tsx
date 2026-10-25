@@ -19,11 +19,15 @@ import "./Fiche.css";
   - « Tirer pour le QR » : en haut de page, on tire vers le bas → la photo remonte et le QR code
     de la fiche apparaît (avec le logo) ; on relâche → tout reprend sa place.
     Aussi : molette vers le haut (ordinateur) et bouton « NFC · QR » (accessibilité).
+  - Ces outils (QR + bouton « NFC · QR » + geste) sont réservés au PROPRIÉTAIRE : il les utilise pour qu'une
+    personne scanne sa fiche. Un visiteur qui l'a ouverte par un scan ne les voit pas (`ownerTools`, faux par défaut).
 */
 interface FicheProps {
   fiche: FicheRecord;
   scrollerRef?: RefObject<HTMLDivElement>;
   baseUrl?: string;
+  /** Affiche le QR code, le bouton « NFC · QR » et active le geste « tirer pour le QR ». Réservé au propriétaire. */
+  ownerTools?: boolean;
 }
 interface Action {
   k: string;
@@ -36,12 +40,13 @@ export default function Fiche({
   fiche,
   scrollerRef,
   baseUrl = `${ENV.VITE_BASE_URL}/f/`,
+  ownerTools = false,
 }: FicheProps) {
   const publicAppUrl = (
     import.meta.env.VITE_PUBLIC_APP_URL || window.location.origin
   ).replace(/\/+$/, "");
   const root = useRef<HTMLDivElement>(null);
-  const [held, setHeld] = usePullQR(root, scrollerRef);
+  const [held, setHeld] = usePullQR(root, scrollerRef, ownerTools);
   const e = resolveHeader(fiche);
   const tabs = visibleTabs(fiche);
   const [open, setOpen] = useState(
@@ -110,15 +115,19 @@ export default function Fiche({
       >
         <div className="f-chips">
           <span>Fiche de contact</span>
-          <button onClick={() => setHeld(h => !h)} aria-pressed={held}>
-            <I n="qr" s={12} />
-            NFC · QR
-          </button>
+          {ownerTools && (
+            <button onClick={() => setHeld(h => !h)} aria-pressed={held}>
+              <I n="qr" s={12} />
+              NFC · QR
+            </button>
+          )}
         </div>
-        <div className="f-qrp" aria-hidden={!held}>
-          <QR text={url} logo={fiche.logo} size={176} />
-          <p>Scannez pour ouvrir la fiche de {fiche.prenom}</p>
-        </div>
+        {ownerTools && (
+          <div className="f-qrp" aria-hidden={!held}>
+            <QR text={url} logo={fiche.logo} size={176} />
+            <p>Scannez pour ouvrir la fiche de {fiche.prenom}</p>
+          </div>
+        )}
         <div className="f-id">
           {e.disposition === "portrait" && (
             <>

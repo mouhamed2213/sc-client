@@ -1,13 +1,18 @@
 import type { Dispatch, RefObject, SetStateAction } from "react";
 import { useEffect, useState } from "react";
 
-/** Geste « tirer pour le QR » : état tenu, molette et bouton d'accessibilité. */
+/**
+ * Geste « tirer pour le QR » : état tenu, molette et bouton d'accessibilité.
+ * `enabled = false` (visiteur) : aucun écouteur n'est installé et le QR n'est jamais « tenu ».
+ */
 export function usePullQR(
   rootRef: RefObject<HTMLDivElement>,
   scrollerRef?: RefObject<HTMLDivElement>,
+  enabled = true,
 ): [boolean, Dispatch<SetStateAction<boolean>>] {
   const [held, setHeld] = useState(false);
   useEffect(() => {
+    if (!enabled) return undefined;
     const root = rootRef.current!,
       sc = scrollerRef?.current || null;
     const top = () => (sc ? sc.scrollTop : window.scrollY) <= 0;
@@ -83,6 +88,6 @@ export function usePullQR(
       el.removeEventListener("wheel", wh as EventListener);
       clearTimeout(timer);
     };
-  }, [rootRef, scrollerRef]);
-  return [held, setHeld];
+  }, [rootRef, scrollerRef, enabled]);
+  return [enabled && held, setHeld];
 }

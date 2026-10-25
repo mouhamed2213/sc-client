@@ -392,7 +392,7 @@ export function FichePage() {
         <div className="fiche-preview-stage">
           <div className="fiche-preview-device">
             <div className="fiche-preview-device-in" ref={phoneScroller}>
-              <Fiche key={fiche.id} fiche={fiche} scrollerRef={phoneScroller} />
+              <Fiche key={fiche.id} fiche={fiche} scrollerRef={phoneScroller} ownerTools />
             </div>
           </div>
         </div>
